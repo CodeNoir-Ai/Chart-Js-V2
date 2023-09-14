@@ -280,9 +280,9 @@ g.append("g")
     .enter().append("line")
     .attr("class", "line")
     .attr("x1", d => x(new Date(d.Date)))
-    .attr("y1", d => y(d.high))
+    .attr("y1", d => y(d.High))
     .attr("x2", d => x(new Date(d.Date)))
-    .attr("y2", d => y(d.low))
+    .attr("y2", d => y(d.Low))
     .attr("stroke", d => d.Open > d.Close ? "red" : "green");
 
 

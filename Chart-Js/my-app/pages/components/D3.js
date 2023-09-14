@@ -27,6 +27,7 @@ const D3JS = () => {
     axios.get('http://localhost:3001/stockdata')
     .then(response => {
       if (!Array.isArray(response.data) || !response.data.length) {
+        console.log(response.data)
         console.error('Invalid data format');
         return;
       }
