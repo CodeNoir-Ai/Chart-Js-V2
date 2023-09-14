@@ -16,10 +16,10 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
       .domain(d3.extent(data, d => d.Date))
       .range([0, width]);
   
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.Close)])
-      .nice()
+      const y = d3.scaleLinear()
+      .domain([d3.min(data, d => d.Close), d3.max(data, d => d.Close)])
       .range([height, 0]);
+    
   
     // Create line generator
     const line = d3.line()
@@ -217,10 +217,13 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
   .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
   .range([0, width]);
 
-const y = d3.scaleLinear()
-  .domain([0, d3.max(data, d => d.Close)])
-  .nice()
+  const y = d3.scaleLinear()
+  .domain([
+    d3.min(data, d => Math.min(d.Low, d.Close)), 
+    d3.max(data, d => Math.max(d.High, d.Close))
+  ])
   .range([height, 0]);
+
 
 // Axes
 const xAxis = d3.axisBottom(x);
