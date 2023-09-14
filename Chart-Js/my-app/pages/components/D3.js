@@ -78,7 +78,9 @@ const D3JS = () => {
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
   
     // Create Grid lines
-    const g = svg.append("g").attr("transform", "translate(0, 0)");
+    const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // const g = svg.append("g").attr("transform", "translate(0, 0)");
   
     // Function to handle window resize
     const handleResize = () => {

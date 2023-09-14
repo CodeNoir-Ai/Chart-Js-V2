@@ -291,9 +291,9 @@ g.append("g")
     .on("zoom", (event) => {
         const transform = event.transform;
         const minTranslateX = (1 - transform.k) * x(new Date(data[0].Date));
-        if (transform.x > minTranslateX) {
-            transform.x = minTranslateX;
-        }
+        // if (transform.x > minTranslateX) {
+        //     transform.x = minTranslateX;
+        // }
         const newX = transform.rescaleX(x);
         const newWidth = initialWidth * Math.sqrt(transform.k); 
         g.select(".x-axis").call(xAxis.scale(newX));
