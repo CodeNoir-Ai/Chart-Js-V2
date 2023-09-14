@@ -115,7 +115,7 @@ const D3JS = () => {
 
     // Initialize margins and data
 
-  }, [ chartType]);
+  }, [ chartType, data]);
   
   
 
