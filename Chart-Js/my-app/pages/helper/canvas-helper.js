@@ -70,12 +70,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x));
 
-      svg.append("defs").append("clipPath")
-    .attr("id", "clip")
-    .append("rect")
-    .attr("width", width)
-    .attr("height", height)
-
+     
 
       const linePath = g.append("path")
       .datum(data)
@@ -278,16 +273,16 @@ g.append("g")
     .attr("height", d => Math.abs(y(d.Open) - y(d.Close)))
     .attr("width", initialWidth)
     .attr("fill", d => d.Open > d.Close ? "red" : "green");
-
+ 
   // Lines for High and Low
   const lines = g.selectAll(".line")
     .data(data)
     .enter().append("line")
     .attr("class", "line")
     .attr("x1", d => x(new Date(d.Date)))
-    .attr("y1", d => y(d.High))
+    .attr("y1", d => y(d.high))
     .attr("x2", d => x(new Date(d.Date)))
-    .attr("y2", d => y(d.Low))
+    .attr("y2", d => y(d.low))
     .attr("stroke", d => d.Open > d.Close ? "red" : "green");
 
 
@@ -295,7 +290,7 @@ g.append("g")
     .scaleExtent([1, 20])
     .on("zoom", (event) => {
         const transform = event.transform;
-        const minTranslateX = (1 - transform.k) * x(new Date(data[0].date));
+        const minTranslateX = (1 - transform.k) * x(new Date(data[0].Date));
         if (transform.x > minTranslateX) {
             transform.x = minTranslateX;
         }

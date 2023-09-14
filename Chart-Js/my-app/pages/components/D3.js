@@ -10,7 +10,7 @@ const D3JS = () => {
   const chartRef = useRef(null);
   const toolTipRef = useRef(null);
   const [enableLineDrawing, setEnableLineDrawing] = useState(false)
-  const [chartType, setChartType] = useState('line'); 
+  const [chartType, setChartType] = useState('candlestick'); 
   const [data, setData] = useState([]);  // State to hold fetched data
 
 
@@ -24,21 +24,36 @@ const D3JS = () => {
     d3.select(chartRef.current).selectAll("*").remove();
    
     const margin = { top: 70, right: 60, bottom: 50, left: 80 };
-    // Fetch data from local server
     axios.get('http://localhost:3001/stockdata')
-      .then(response => {
-        setData(response.data);  // Update state with fetched data
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-    
-    // Parse the date and convert the close to a number
-    const parseDate = d3.timeParse("%Y-%m-%d");
-    data.forEach(d => {
-      d.Date = parseDate(d.Date);
-      d.Close = +d.Close;
+    .then(response => {
+      if (!Array.isArray(response.data) || !response.data.length) {
+        console.error('Invalid data format');
+        return;
+      }
+      const parsedData = response.data.map(d => {
+        const date = new Date(d.date);
+        const open = +d.open;
+        const high = +d.high;
+        const low = +d.low;
+        const close = +d.close;
+        if (!date || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
+          console.error('Invalid data entry:', d);
+          return null;
+        }
+        return { Date: date, Open: open, High: high, Low: low, Close: close };
+      }).filter(Boolean);
+      setData(parsedData);
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
     });
+    
+
+    // const parseDate = d3.timeParse("%Y-%m-%d");
+    // data.forEach(d => {
+    //   d.Date = parseDate(d.Date);
+    //   d.Close = +d.Close;
+    // });
   
 
     // Create responsive container
@@ -94,9 +109,7 @@ const D3JS = () => {
       window.removeEventListener('resize', handleResize);
     };
 
-    console.log("Data:", data);
-    console.log("X Scale:", x.domain(), x.range());
-    console.log("Y Scale:", y.domain(), y.range());
+
     // Initialize margins and data
 
   }, [ chartType]);
