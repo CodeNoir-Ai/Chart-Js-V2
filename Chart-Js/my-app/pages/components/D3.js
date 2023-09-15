@@ -10,7 +10,7 @@ const D3JS = () => {
   const chartRef = useRef(null);
   const priceAxiesRef = useRef(null)
   const toolTipRef = useRef(null);
-  const [enableLineDrawing, setEnableLineDrawing] = useState(true)
+  const [enableLineDrawing, setEnableLineDrawing] = useState(false)
   const [chartType, setChartType] = useState('candlestick'); 
   const [data, setData] = useState([]);  // State to hold fetched data
 
@@ -159,7 +159,10 @@ const svgContainer = svgDiv.append('svg')
 
 <div className = "chart-wrapper">
 <div className="chart-container">
-      <Chartleft toggleChartType={toggleChartType} />
+      <Chartleft 
+      toggleChartType={toggleChartType}
+      toggleLineDrawing={toggleLineDrawing}
+      />
         <div ref={chartRef}></div>
 
         <div className="price-axies-container" ref={priceAxiesRef}></div>
