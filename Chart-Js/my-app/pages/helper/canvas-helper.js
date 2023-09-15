@@ -1,5 +1,6 @@
 // generateLineChart.js
 import * as d3 from 'd3';
+import _ from 'lodash';
 
 
 /**
@@ -8,9 +9,12 @@ import * as d3 from 'd3';
  * @param {Number} width - The width of the SVG element.
  * @param {Number} height - The height of the SVG element.
  */
-export const generateLineChart = (svg, g, data, width, height, enableLineDrawing) => {
+
+
+export const generateLineChart = (svg, g, data, width, height, enableLineDrawing, priceAxiesRef) => {
   // Create scales
   g.selectAll('*').remove();
+  d3.select(priceAxiesRef.current).selectAll("*").remove();
 
     const x = d3.scaleUtc()
       .domain(d3.extent(data, d => d.Date))
@@ -19,7 +23,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
       const y = d3.scaleLinear()
       .domain([d3.min(data, d => d.Close), d3.max(data, d => d.Close)])
       .range([height, 0]);
-    
+     
   
     // Create line generator
     const line = d3.line()
@@ -59,10 +63,15 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
       .attr("class", "y-grid")
       .call(yAxisGrid);
  
-    // Add the y-axis
-    g.append("g")
-      .call(d3.axisLeft(y));
+ // Add the y-axis to the right
+ const yAxisGroup = g.append("g")
+ .attr("class", "y-axis")
+ .attr("transform", `translate(${width}, 0)`)
+      //Draws the y axies 
+//  .call(d3.axisRight(y)); 
   
+ yAxisGroup.select(".domain").remove();
+
 
 
       const xAxisGroup = g.append("g")
@@ -145,8 +154,6 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 let lineStartPoint = null;
 // Add mousedown event for line drawing
 
-if(enableLineDrawing)
-{
   zoomRect.on("mousedown", (event) => {
     console.log("mousedownistriggerd")
     console.log(enableLineDrawing)
@@ -191,19 +198,27 @@ if(enableLineDrawing)
         .attr("stroke-dasharray", "4 4");
     }
   });
-  
-}else { 
-  zoomRect.on("mousedown", null)
-  zoomRect.on("mousemove", null)
-}
-
-// Add these event listeners at the bottom of your function
 
 
-
+  // Create SVG element for price axis
+  const priceAxisSvg = d3.select(priceAxiesRef.current)
+    .append("svg")
+    .attr("width", 50)  // Width of the price axis container
+    .attr("height", height)  // Set the height to be the same as the main SVG
+    .attr("class", "price-axis-container");
 
 
 
+  // Generate price labels similar to how you did for the main y-axis
+  const yAxisTicks = y.ticks(10);  // Same number of ticks as y-grid
+  yAxisTicks.forEach(tick => {
+    priceAxisSvg.append('text')
+      .attr('x', 10)
+      .attr('y', y(tick) + 40)  // Use the same y scale
+      .attr('dy', '.35em')
+      .attr('text-anchor', 'start')
+      .text(tick);
+  });
 
 
   };
@@ -227,18 +242,22 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
 // Axes
 const xAxis = d3.axisBottom(x);
-const yAxis = d3.axisLeft(y);
+const yAxis = d3.axisRight(y);
 
 
-  const yAxisGrid = d3.axisLeft(y)
-            .tickSize(-width)
+  // If you also want to move the y-grid lines, you can do so like this:
+  const yAxisGrid = d3.axisRight(y)  // Use axisRight instead of axisLeft
+            .tickSize(width)  // Positive width to extend grid lines across the chart
             .tickFormat('')
             .ticks(10);
 
-        g.append("g")
-            .attr("class", "y-grid")
-            .call(yAxisGrid);
+  g.append("g")
+    .attr("class", "y-grid")
+    .attr("transform", `translate(0, 0)`)  // No need to translate
+    .call(yAxisGrid);
 
+
+    
    // Add x-axis grid lines
    const xAxisGrid = d3.axisBottom(x)
    .tickSize(-height)
@@ -261,9 +280,10 @@ g.append("g")
     .attr("transform", `translate(0, ${height})`)
     .call(xAxis);
 
-  g.append("g")
-    .attr("class", "y-axis")
-    .call(yAxis);
+  // g.append("g")
+  //   .attr("class", "y-axis")
+  //   .attr("transform", `translate(${width}, 0)`)  // Translate it to the right
+  //   .call(yAxis);
 
   // Bars
   const initialWidth = 6;
@@ -289,35 +309,34 @@ g.append("g")
     .attr("stroke", d => d.Open > d.Close ? "red" : "green");
 
 
+    const throttledZoom = _.throttle((event) => {
+      const transform = event.transform;
+      const minTranslateX = (1 - transform.k) * x(new Date(data[0].Date));
+      // if (transform.x > minTranslateX) {
+      //     transform.x = minTranslateX;
+      // }
+      const newX = transform.rescaleX(x);
+      const newWidth = initialWidth * Math.sqrt(transform.k); 
+      g.select(".x-axis").call(xAxis.scale(newX));
+      bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
+          .attr("width", newWidth);
+      lines.attr("x1", d => newX(new Date(d.Date)))
+          .attr("x2", d => newX(new Date(d.Date)));
+    })
+
     const zoom = d3.zoom()
     .scaleExtent([1, 20])
-    .on("zoom", (event) => {
-        const transform = event.transform;
-        const minTranslateX = (1 - transform.k) * x(new Date(data[0].Date));
-        // if (transform.x > minTranslateX) {
-        //     transform.x = minTranslateX;
-        // }
-        const newX = transform.rescaleX(x);
-        const newWidth = initialWidth * Math.sqrt(transform.k); 
-        g.select(".x-axis").call(xAxis.scale(newX));
-        bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
-            .attr("width", newWidth);
-        lines.attr("x1", d => newX(new Date(d.Date)))
-            .attr("x2", d => newX(new Date(d.Date)));
-    });
-
-    zoomRect.call(zoom);
+    .on("zoom", throttledZoom);
+  
+  zoomRect.call(zoom);
 }
 
 
 
 
 
-//This generates the specfic Chart Based on selection 
-
 // This generates the specific Chart Based on selection
-// This generates the specific Chart Based on selection
-export const generateChart = (chartType, svg, g, data, width, height) => {
+export const generateChart = (chartType, svg, g, data, width, height, enableLineDrawing, priceAxiesRef) => {
   // Clear previous chart elements
   svg.selectAll('*').remove();
 
@@ -326,7 +345,7 @@ export const generateChart = (chartType, svg, g, data, width, height) => {
 
   switch(chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height);
+      return generateLineChart(svg, newG, data, width, height, enableLineDrawing, priceAxiesRef);
     case 'candlestick':
       return generateCandleStickChart(svg, newG, data, width, height);
     default:

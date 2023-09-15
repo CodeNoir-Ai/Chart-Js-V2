@@ -18,12 +18,12 @@ export default function Home()
             {/* <TradingChart /> */}
 
 
-            <div className = {styles.grid_main}>
+            <div>
 
-                <Chartleft />
+                {/* <Chartleft /> */}
                 <D3JS />
-                <ChartContents />
-                <Chartright />
+                {/* <ChartContents />
+                <Chartright /> */}
 
 
 
