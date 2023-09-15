@@ -25,44 +25,44 @@ const D3JS = () => {
     d3.select(chartRef.current).selectAll("*").remove();
    
     const margin = { top: 30, right: 80, bottom: 40, left: 53 };
-    // axios.get('http://localhost:3001/stockdata')
-    // .then(response => {
-    //   if (!Array.isArray(response.data) || !response.data.length) {
-    //     console.log(response.data)
-    //     console.error('Invalid data format');
-    //     return;
-    //   }
-    //   const parsedData = response.data.map(d => {
-    //     const date = new Date(d.date);
-    //     const open = +d.open;
-    //     const high = +d.high;
-    //     const low = +d.low;
-    //     const close = +d.close;
-    //     if (!date || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
-    //       console.error('Invalid data entry:', d);
-    //       return null;
-    //     }
-    //     return { Date: date, Open: open, High: high, Low: low, Close: close };
-    //   }).filter(Boolean);
-    //   setData(parsedData);
-    // })
-    // .catch(error => {
-    //   console.error('Error fetching data:', error);
-    // });
-
-    const parsedData = MainData.map(d => {
-      const date = new Date(d.Date);
-      const open = +d.Open;
-      const high = +d.High;
-      const low = +d.Low;
-      const close = +d.Close;
-      if (!date || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
-        console.error('Invalid data entry:', d);
-        return null;
+    axios.get('http://localhost:3001/stockdata')
+    .then(response => {
+      if (!Array.isArray(response.data) || !response.data.length) {
+        console.log(response.data)
+        console.error('Invalid data format');
+        return;
       }
-      return { Date: date, Open: open, High: high, Low: low, Close: close };
-    }).filter(Boolean);
-    setData(parsedData);
+      const parsedData = response.data.map(d => {
+        const date = new Date(d.date);
+        const open = +d.open;
+        const high = +d.high;
+        const low = +d.low;
+        const close = +d.close;
+        if (!date || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
+          console.error('Invalid data entry:', d);
+          return null;
+        }
+        return { Date: date, Open: open, High: high, Low: low, Close: close };
+      }).filter(Boolean);
+      setData(parsedData);
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+    });
+
+    // const parsedData = MainData.map(d => {
+    //   const date = new Date(d.Date);
+    //   const open = +d.Open;
+    //   const high = +d.High;
+    //   const low = +d.Low;
+    //   const close = +d.Close;
+    //   if (!date || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
+    //     console.error('Invalid data entry:', d);
+    //     return null;
+    //   }
+    //   return { Date: date, Open: open, High: high, Low: low, Close: close };
+    // }).filter(Boolean);
+    // setData(parsedData);
     
 
 
