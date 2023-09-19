@@ -143,7 +143,7 @@ const svgContainer = svgDiv.append('svg')
 
     // Initialize margins and data
 
-  },[chartType, data, enableLineDrawing, priceAxiesRef]);
+  },[chartType, ,   enableLineDrawing, priceAxiesRef]);
   
   const toggleChartType = () => {
     setChartType(prevType => prevType === 'candlestick' ? 'line' : 'candlestick');
