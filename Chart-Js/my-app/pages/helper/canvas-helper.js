@@ -11,7 +11,7 @@ import _ from 'lodash';
  */
 
 
-export const generateLineChart = (svg, g, data, width, height, enableLineDrawing, priceAxiesRef) => {
+export const generateLineChart = (svg, g, data, width, height, enableLineDrawing, priceAxiesRef,setZoomState, zoomState ) => {
   // Create scales
   g.selectAll('*').remove();
   d3.select(priceAxiesRef.current).selectAll("*").remove();
@@ -133,13 +133,69 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
 // ... (your existing code)
 
+manageLineDrawing(svg, g, zoomRect, enableLineDrawing);
+
+
+    const zoom = d3.zoom()
+                .scaleExtent([1, 20])
+
+                .on("zoom", (event) => {
+                    const transform = event.transform;
+                    setZoomState(transform);  // Save the zoom state
+                    const newX = transform.rescaleX(x);
+                    g.select(".x-axis").call(xAxis.scale(newX));
+                    g.selectAll(".dot")
+                    .attr("cx", d => newX(d.Date));  // Use d.Date, not new Date(d.date)
+                    line.x(d => newX(d.Date));  // Update the line generator's x-scale
+                    linePath.attr("d", line(data));  // Re-render the line path
+                });
+                zoomRect.call(zoom);
+
+
+            //Generate Line 
+
+            if (zoomState) {
+              svg.call(zoom.transform, zoomState);
+            }
+            
+
+  // Create SVG element for price axis
+  const priceAxisSvg = d3.select(priceAxiesRef.current)
+    .append("svg")
+    .attr("width", 50)  // Width of the price axis container
+    .attr("height", height)  // Set the height to be the same as the main SVG
+    .attr("class", "price-axis-container");
+
+
+
+  // Generate price labels similar to how you did for the main y-axis
+  const yAxisTicks = y.ticks(10);  // Same number of ticks as y-grid
+  yAxisTicks.forEach(tick => {
+    priceAxisSvg.append('text')
+      .attr('x', 10)
+      .attr('y', y(tick) + 40)  // Use the same y scale
+      .attr('dy', '.35em')
+      .attr('text-anchor', 'start')
+      .text(tick);
+  });
+
+
+  };
+
+
+  //Manges the line drawing 
+
+  export const manageLineDrawing = (svg, g, zoomRect, enableLineDrawing) => {
+
+    console.log("Line Drawing is enabled'", enableLineDrawing)
          // Add this variable at the top of your function
          let lineStartPoint = null;
          // Add mousedown event for line drawing
          
          if(enableLineDrawing){
+          console.log("Line Drwaing is now Enabled:", enableLineDrawing)
+
            zoomRect.on("mousedown", (event) => {
-             console.log("mousedownistriggerd")
              console.log(enableLineDrawing)
              const [mx, my] = d3.pointer(event);
              const mouseX = mx;
@@ -184,49 +240,11 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
          
            
          }
+
+
          
+  }
 
-    const zoom = d3.zoom()
-                .scaleExtent([1, 20])
-
-                .on("zoom", (event) => {
-                    const transform = event.transform;
-                    const newX = transform.rescaleX(x);
-                    g.select(".x-axis").call(xAxis.scale(newX));
-                    g.selectAll(".dot")
-                    .attr("cx", d => newX(d.Date));  // Use d.Date, not new Date(d.date)
-                    line.x(d => newX(d.Date));  // Update the line generator's x-scale
-                    linePath.attr("d", line(data));  // Re-render the line path
-                });
-                zoomRect.call(zoom);
-
-
-            //Generate Line 
-
-
-
-  // Create SVG element for price axis
-  const priceAxisSvg = d3.select(priceAxiesRef.current)
-    .append("svg")
-    .attr("width", 50)  // Width of the price axis container
-    .attr("height", height)  // Set the height to be the same as the main SVG
-    .attr("class", "price-axis-container");
-
-
-
-  // Generate price labels similar to how you did for the main y-axis
-  const yAxisTicks = y.ticks(10);  // Same number of ticks as y-grid
-  yAxisTicks.forEach(tick => {
-    priceAxisSvg.append('text')
-      .attr('x', 10)
-      .attr('y', y(tick) + 40)  // Use the same y scale
-      .attr('dy', '.35em')
-      .attr('text-anchor', 'start')
-      .text(tick);
-  });
-
-
-  };
   
 
 export const generateCandleStickChart = (svg, g, data, width, height) => { 
@@ -339,9 +357,8 @@ g.append("g")
 
 
 
-
 // This generates the specific Chart Based on selection
-export const generateChart = (chartType, svg, g, data, width, height, enableLineDrawing, priceAxiesRef) => {
+export const generateChart = (chartType, svg, g, data, width, height, enableLineDrawing, priceAxiesRef, priceAxisSvg, setZoomState, zoomState) => {
   // Clear previous chart elements
   svg.selectAll('*').remove();
 
@@ -350,7 +367,7 @@ export const generateChart = (chartType, svg, g, data, width, height, enableLine
 
   switch(chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height, enableLineDrawing, priceAxiesRef);
+      return generateLineChart(svg, newG, data, width, height, enableLineDrawing, priceAxiesRef, setZoomState, zoomState);
     case 'candlestick':
       return generateCandleStickChart(svg, newG, data, width, height);
     default:

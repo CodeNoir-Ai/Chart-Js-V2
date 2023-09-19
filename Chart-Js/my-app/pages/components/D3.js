@@ -4,7 +4,7 @@ import axios from 'axios';  // Make sure to install axios
 import style from '../../styles/Home.module.css'
 import MainData from '../../public/assets/XRP-USD.json';  // Assuming this is correct
 import styles from '../../styles/chart.module.css';
-import {generateChart, generateCandleStickChart, generateLineChart, drawPriceAxis} from '../../pages/helper/canvas-helper'
+import {generateChart, generateCandleStickChart, generateLineChart, manageLineDrawing} from '../../pages/helper/canvas-helper'
 import Chartleft from './chart_data/chart_left';
 const D3JS = () => {
   const chartRef = useRef(null);
@@ -13,6 +13,7 @@ const D3JS = () => {
   const [enableLineDrawing, setEnableLineDrawing] = useState(false)
   const [chartType, setChartType] = useState('candlestick'); 
   const [data, setData] = useState([]);  // State to hold fetched data
+  const [zoomState, setZoomState] = useState();
 
 
   const toggleLineDrawing = () => {  // 2. Add toggle function
@@ -122,7 +123,7 @@ const svgContainer = svgDiv.append('svg')
       const newG = svg.append("g").attr("transform", "translate(0, 0)");
   
       // Call the generateLineChart function with new dimensions
-    generateChart(chartType, svg, newG, data, newWidth, newHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg);
+    generateChart(chartType, svg, newG, data, newWidth, newHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, setZoomState, zoomState);
     };
 
 
@@ -130,8 +131,10 @@ const svgContainer = svgDiv.append('svg')
 
 
     // Initial chart drawing
-    generateChart(chartType, svg, g, data, initialWidth, initialHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg);
+    generateChart(chartType, svg, g, data, initialWidth, initialHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg, setZoomState, zoomState);
   
+    manageLineDrawing(svg, enableLineDrawing)
+
     // Attach resize event listener
     window.addEventListener('resize', handleResize);
   
@@ -143,7 +146,16 @@ const svgContainer = svgDiv.append('svg')
 
     // Initialize margins and data
 
-  },[chartType, ,   enableLineDrawing, priceAxiesRef]);
+  },[chartType, priceAxiesRef]);
+
+  // This useEffect toggles line drawing on and off
+useEffect(() => {
+  const svg = d3.select(chartRef.current).select('g');
+  console.log(enableLineDrawing)
+
+manageLineDrawing(svg, g, zoomRect, enableLineDrawing);
+}, [enableLineDrawing]);
+
   
   const toggleChartType = () => {
     setChartType(prevType => prevType === 'candlestick' ? 'line' : 'candlestick');
