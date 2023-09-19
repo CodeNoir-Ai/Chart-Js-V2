@@ -2,13 +2,61 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
 
-
 /**
  * @param {Object} svg - The D3 Selection for the SVG element to draw in.
  * @param {Array} data - The data to plot.
  * @param {Number} width - The width of the SVG element.
  * @param {Number} height - The height of the SVG element.
  */
+
+export const manageLineDrawing = (svg, g, zoomRect, enableLineDrawing) => {
+
+  
+  let lineStartPoint = null;
+
+  if (enableLineDrawing) {
+    zoomRect.on("click", (event) => {
+      
+      const [mx, my] = d3.pointer(event);
+      const mouseX = mx;
+      const mouseY = my;
+      console.log("Just enabled the drawing")
+      if (!lineStartPoint) {
+        lineStartPoint = { x: mouseX, y: mouseY };
+      } else {
+        g.append("line")
+          .attr("x1", lineStartPoint.x)
+          .attr("y1", lineStartPoint.y)
+          .attr("x2", mouseX)
+          .attr("y2", mouseY)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1.5);
+        lineStartPoint = null;
+      }
+    });
+
+    zoomRect.on("mousemove", (event) => {
+      if (lineStartPoint) {
+        const [mx, my] = d3.pointer(event);
+        const mouseX = mx;
+        const mouseY = my;
+
+        g.selectAll(".temp-line").remove();
+
+        g.append("line")
+          .attr("class", "temp-line")
+          .attr("x1", lineStartPoint.x)
+          .attr("y1", lineStartPoint.y)
+          .attr("x2", mouseX)
+          .attr("y2", mouseY)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1.5)
+          .attr("stroke-dasharray", "4 4");
+      }
+    });
+  }
+};
+
 
 
 export const generateLineChart = (svg, g, data, width, height, enableLineDrawing, priceAxiesRef) => {
@@ -133,58 +181,8 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
 // ... (your existing code)
 
-         // Add this variable at the top of your function
-         let lineStartPoint = null;
-         // Add mousedown event for line drawing
-         
-         if(enableLineDrawing){
-           zoomRect.on("mousedown", (event) => {
-             console.log("mousedownistriggerd")
-             console.log(enableLineDrawing)
-             const [mx, my] = d3.pointer(event);
-             const mouseX = mx;
-             const mouseY = my;
-           
-             if (!lineStartPoint) {
-               lineStartPoint = { x: mouseX, y: mouseY };
-             } else {
-               g.append("line")
-                 .attr("x1", lineStartPoint.x)
-                 .attr("y1", lineStartPoint.y)
-                 .attr("x2", mouseX)
-                 .attr("y2", mouseY)
-                 .attr("stroke", "black")
-                 .attr("stroke-width", 1.5);
-               lineStartPoint = null;
-             }
-           });
-           
-           // Add mousemove event for temporary line drawing
-           zoomRect.on("mousemove", (event) => {
-             if (lineStartPoint) {
-               const [mx, my] = d3.pointer(event);
-               const mouseX = mx;
-               const mouseY = my;
-           
-               // Remove old temporary line
-               g.selectAll(".temp-line").remove();
-           
-               // Draw a new temporary line
-               g.append("line")
-                 .attr("class", "temp-line")
-                 .attr("x1", lineStartPoint.x)
-                 .attr("y1", lineStartPoint.y)
-                 .attr("x2", mouseX)
-                 .attr("y2", mouseY)
-                 .attr("stroke", "black")
-                 .attr("stroke-width", 1.5)
-                 .attr("stroke-dasharray", "4 4");
-             }
-           });
-         
-           
-         }
-         
+manageLineDrawing(svg, g, zoomRect, enableLineDrawing);
+
 
     const zoom = d3.zoom()
                 .scaleExtent([1, 20])
@@ -201,7 +199,6 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
                 zoomRect.call(zoom);
 
 
-            //Generate Line 
 
 
 
