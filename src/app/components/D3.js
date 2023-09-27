@@ -22,6 +22,7 @@ const D3JS = () => {
 
     d3.select(chartRef.current).selectAll("*").remove();
 
+    //TODO can we calculate this instead of hard code?
     const margin = { top: 30, right: 80, bottom: 40, left: 53 };
     axios.get('http://localhost:3001/stockdata')
       .then(response => {
