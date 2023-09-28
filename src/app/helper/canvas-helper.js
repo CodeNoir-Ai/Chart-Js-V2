@@ -2,6 +2,8 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
 
+let listLines = []
+
 /**
  * @param {Object} svg - The D3 Selection for the SVG element to draw in.
  * @param {Array} data - The data to plot.
@@ -20,23 +22,31 @@ export const manageLineDrawing = (svg, g, zoomRect, enableLineDrawing) => {
       const [mx, my] = d3.pointer(event);
       const mouseX = mx;
       const mouseY = my;
-      console.log("Just enabled the drawing")
+      console.log("new pending drawing")
       if (!lineStartPoint) {
         lineStartPoint = { x: mouseX, y: mouseY };
       } else {
 
         /* store array of all drawing x1x2y1x2 */
+
+        const x1 = lineStartPoint.x, y1 = lineStartPoint.y, x2 = mouseX, y2 = mouseY;
         g.append("line")
           .attr("class", "draw-line")
-          .attr("x1", lineStartPoint.x)
-          .attr("y1", lineStartPoint.y)
-          .attr("x2", mouseX)
-          .attr("y2", mouseY)
+          .attr("x1", x1)
+          .attr("y1", y1)
+          .attr("x2", x2)
+          .attr("y2", y2)
           .attr("stroke", "black")
           .attr("stroke-width", 1.5);
+          
+
+        console.log("finished drawing")
+        listLines.push({ x1: x1, x2: x2, y1: y1, y2: y2})
+        console.log(listLines)
+
+
+        g.selectAll(".temp-line").remove();
         lineStartPoint = null;
-
-
       }
     });
 
@@ -174,7 +184,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
   svg.on("mousemove", (event) => {
     const [mx, my] = d3.pointer(event);
-    crosshair.style('display', "contents");
+    crosshair.style('display', "none");
     crosshairX.attr("x1", mx).attr("x2", mx);
     crosshairY.attr("y1", my).attr("y2", my);
   });
@@ -320,19 +330,37 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
     .attr("y2", d => y(d.Low))
     .attr("stroke", d => d.Open > d.Close ? "red" : "green");
 
+  /*
+    const drawlines = g.selectAll(".draw-line")
+      .append("line")
+      .attr("class", "draw-line")
+      .attr("x1", 100)
+      .attr("y1", 100)
+      .attr("x2", 300)
+      .attr("y2", 200)
+      .attr("stroke", "black")
+      .attr("stroke-width", 1.5)
+    */
 
-  const drawlines = g.selectAll(".draw-line")
+  const drawlines = g.selectAll('.draw-line')
 
-    .data(data)
-    .enter().append("line")
-    .attr("class", "draw-line")
-    .attr("x1", 100)
-    .attr("y1", 100)
-    .attr("x2", 300)
-    .attr("y2", 200)
-    .attr("stroke", "black")
-    .attr("stroke-width", 1.5);
+  if (listLines) {
+    console.log("lines")
+    console.log(listLines)
 
+    listLines.forEach(function (line) {
+      g.append("line")
+        .attr("class", "draw-line")
+        .attr("x1", line.x1)
+        .attr("y1", line.y1)
+        .attr("x2", line.x2)
+        .attr("y2", line.y2)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1.5);
+    });
+
+
+  }
 
 
 
@@ -351,9 +379,8 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
       .attr("x2", d => newX(new Date(d.Date)));
 
 
-    drawlines.attr("x2", d => newX(new Date(d.Date)))
-      .attr("stroke", "red")
-      .attr("stroke-width", 3.5);
+    drawlines.attr("x1", d => newX(new Date(d.Date)))
+    //.attr("y2", d => newX(new Date(d.Date)));
 
 
 

@@ -72,9 +72,9 @@ const D3JS = () => {
       .classed("svg-container", true);  // Make it responsive
 
 
-      const zoomRect = svgDiv.select("rect");
-      zoomRectRef.current = zoomRect;
-    
+    const zoomRect = svgDiv.select("rect");
+    zoomRectRef.current = zoomRect;
+
     // Get initial dimensions
     const initialWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
     const initialHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
@@ -149,29 +149,34 @@ const D3JS = () => {
   }, [chartType, priceAxiesRef]);
 
   // Add this useEffect to your existing component
-// Second useEffect for line drawing
-useEffect(() => {
-  // Select the existing SVG and group elements
-  const svg = d3.select(chartRef.current).select('svg').select('g');
-  console.log(enableLineDrawing)
-  // Assuming you have a rect for zooming in your SVG
-  const zoomRect = svg.select("rect");
+  // Second useEffect for line drawing
+  useEffect(() => {
+    // Select the existing SVG and group elements
+    const svg = d3.select(chartRef.current).select('svg').select('g');
+    console.log(enableLineDrawing)
+    // Assuming you have a rect for zooming in your SVG
+    const zoomRect = svg.select("rect");
 
-  // Check if zoomRect exists
-  if (zoomRect.empty()) {
-    console.warn("No zoomRect found");
-    return;
-  }
+    // Check if zoomRect exists
+    if (zoomRect.empty()) {
+      console.warn("No zoomRect found");
+      return;
+    }
 
-  // Remove existing event listeners to avoid duplication
-  zoomRect.on("mousedown", null);
-  zoomRect.on("mousemove", null);
+    // Remove existing event listeners to avoid duplication
 
-  // Re-attach event listeners if line drawing is enabled
-  if (enableLineDrawing) {
-    manageLineDrawing(svg, svg.select('g'), zoomRect, enableLineDrawing);
-  }
-}, [enableLineDrawing]);
+
+    // Re-attach event listeners if line drawing is enabled
+    if (enableLineDrawing) {
+      manageLineDrawing(svg, svg.select('g'), zoomRect, enableLineDrawing);
+    }
+    return () => {
+      zoomRect.on("mousemove", null);
+      zoomRect.on("click", null);
+       
+    }
+
+  }, [enableLineDrawing]);
 
 
   const toggleChartType = () => {
