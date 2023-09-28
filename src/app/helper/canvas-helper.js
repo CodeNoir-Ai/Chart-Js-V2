@@ -11,6 +11,29 @@ let listLines = []
  * @param {Number} height - The height of the SVG element.
  */
 
+function generateLineDrawings(g, lines) {
+
+
+
+  if (lines) {
+    console.log("lines")
+    console.log(lines)
+
+    lines.forEach(function (line) {
+
+      g.append("line")
+        .attr("class", "draw-line")
+        .attr("x1", line.x1)
+        .attr("y1", line.y1)
+        .attr("x2", line.x2)
+        .attr("y2", line.y2)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1.5);
+    })
+  }
+
+}
+
 export const manageLineDrawing = (svg, g, zoomRect, enableLineDrawing) => {
 
 
@@ -74,7 +97,7 @@ export const manageLineDrawing = (svg, g, zoomRect, enableLineDrawing) => {
 
 
 
-export const generateLineChart = (svg, g, data, width, height, enableLineDrawing, priceAxiesRef) => {
+export const generateLineChart = (svg, g, data, width, height, priceAxiesRef) => {
   // Create scales
   g.selectAll('*').remove();
   d3.select(priceAxiesRef.current).selectAll("*").remove();
@@ -99,7 +122,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
   // Add x-axis grid lines
   const xAxisGrid = d3.axisBottom(x)
-    .tickSize(-height)
+    .tickSize(height)
     .tickFormat('')
     .ticks(6);
 
@@ -113,7 +136,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
   g.append("g")
     .attr("class", "x-grid")
-    .attr("transform", `translate(0, ${height})`)
+    .attr("transform", `translate(0, 0)`)
     .call(xAxisGrid);
 
   // Add y-axis grid lines
@@ -177,10 +200,17 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
       tooltip.style('display', 'none');
     });
 
+
+    generateLineDrawings(g, listLines);
+
+    /* doesn't work?
+
   // Add crosshair
   const crosshair = g.append('g').style('display', 'none');
   const crosshairX = crosshair.append("line").attr("class", "crosshair").attr("y1", 0).attr("y2", height);
   const crosshairY = crosshair.append("line").attr("class", "crosshair").attr("x1", 0).attr("x2", width);
+
+  
 
   svg.on("mousemove", (event) => {
     const [mx, my] = d3.pointer(event);
@@ -193,24 +223,76 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
     crosshair.style("display", "none");
   });
 
+  */
 
-  // move out of line drawing
+  const throttledZoom = _.throttle((event) => {
+    const transform = event.transform;
+    //const minTranslateX = (1 - transform.k) * x(new Date(data[0].Date));
+    // if (transform.x > minTranslateX) {
+    //     transform.x = minTranslateX;
+    // }
 
-  manageLineDrawing(svg, g, zoomRect, enableLineDrawing);
+    const newX = transform.rescaleX(x);
+    //const newWidth = initialWidth * Math.sqrt(transform.k);
+    g.select(".x-axis").call(xAxis.scale(newX));
 
+    /*
+    bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
+      .attr("width", newWidth);
+
+      
+    lines.attr("x1", d => newX(new Date(d.Date)))
+      .attr("x2", d => newX(new Date(d.Date)));
+
+      */
+
+
+
+    const xgrid = g.selectAll('.x-grid');
+    const ygrid = g.selectAll('.y-grid');
+
+    xgrid.attr(`transform`, transform.toString());
+    ygrid.attr(`transform`, transform.toString());
+
+    //xgrid.attr(`transform`, `translate(` + 0 + `, ` + 0 + `) scale(` + transform.k + `)`);
+
+
+    //ygrid.attr(`transform`, `translate(` + 0 + `, ` + 0 + `) scale(` + transform.k + `)`);
+
+
+    linePath.attr(`transform`, transform.toString());
+    g.selectAll(".dot").attr(`transform`, transform.toString());
+
+    const drawlines = g.selectAll('.draw-line');
+    drawlines.attr(`transform`, transform.toString());
+    //.attr("y2", d => newX(new Date(d.Date)));
+
+
+
+
+
+  })
+
+  /*
+    const zoom = d3.zoom()
+      .scaleExtent([1, 20])
+  
+      .on("zoom", (event) => {
+        const transform = event.transform;
+        const newX = transform.rescaleX(x);
+        g.select(".x-axis").call(xAxis.scale(newX));
+        g.selectAll(".dot")
+          .attr("cx", d => newX(d.Date));  // Use d.Date, not new Date(d.date)
+        line.x(d => newX(d.Date));  // Update the line generator's x-scale
+        linePath.attr("d", line(data));  // Re-render the line path
+      });
+    zoomRect.call(zoom);
+    */
 
   const zoom = d3.zoom()
     .scaleExtent([1, 20])
+    .on("zoom", throttledZoom);
 
-    .on("zoom", (event) => {
-      const transform = event.transform;
-      const newX = transform.rescaleX(x);
-      g.select(".x-axis").call(xAxis.scale(newX));
-      g.selectAll(".dot")
-        .attr("cx", d => newX(d.Date));  // Use d.Date, not new Date(d.date)
-      line.x(d => newX(d.Date));  // Update the line generator's x-scale
-      linePath.attr("d", line(data));  // Re-render the line path
-    });
   zoomRect.call(zoom);
 
 
@@ -282,7 +364,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
   const initialWidth = 6;
   const xAxisGrid = d3.axisBottom(x)
-    .tickSize(-height)
+    .tickSize(height)
     .tickFormat('')
     .ticks(6);
 
@@ -295,7 +377,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
   g.append("g")
     .attr("class", "x-grid")
-    .attr("transform", `translate(0, ${height})`)
+    .attr("transform", `translate(0, 0)`)
     .call(xAxisGrid);
 
   g.append("g")
@@ -329,6 +411,8 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
     .attr("x2", d => x(new Date(d.Date)))
     .attr("y2", d => y(d.Low))
     .attr("stroke", d => d.Open > d.Close ? "red" : "green");
+
+    generateLineDrawings(g, listLines);
 
   /*
     const drawlines = g.selectAll(".draw-line")
@@ -364,23 +448,6 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
   }
   */
 
-  if (listLines) {
-    console.log("lines")
-    console.log(listLines)
-
-    listLines.forEach(function (line) {
-
-      g.append("line")
-        .attr("class", "draw-line")
-        .attr("x1", line.x1)
-        .attr("y1", line.y1)
-        .attr("x2", line.x2)
-        .attr("y2", line.y2)
-        .attr("stroke", "black")
-        .attr("stroke-width", 1.5);
-    })
-  }
-
 
 
   const throttledZoom = _.throttle((event) => {
@@ -389,19 +456,37 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
     // if (transform.x > minTranslateX) {
     //     transform.x = minTranslateX;
     // }
-    
+
     const newX = transform.rescaleX(x);
     const newWidth = initialWidth * Math.sqrt(transform.k);
     g.select(".x-axis").call(xAxis.scale(newX));
+
+    /*
     bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
       .attr("width", newWidth);
 
       
     lines.attr("x1", d => newX(new Date(d.Date)))
       .attr("x2", d => newX(new Date(d.Date)));
-      
+
+      */
 
 
+
+    const xgrid = g.selectAll('.x-grid');
+    const ygrid = g.selectAll('.y-grid');
+
+    xgrid.attr(`transform`, transform.toString());
+    ygrid.attr(`transform`, transform.toString());
+
+    //xgrid.attr(`transform`, `translate(` + 0 + `, ` + 0 + `) scale(` + transform.k + `)`);
+
+
+    //ygrid.attr(`transform`, `translate(` + 0 + `, ` + 0 + `) scale(` + transform.k + `)`);
+
+
+    bars.attr(`transform`, transform.toString());
+    lines.attr(`transform`, transform.toString());
     const drawlines = g.selectAll('.draw-line');
     drawlines.attr(`transform`, transform.toString());
     //.attr("y2", d => newX(new Date(d.Date)));
@@ -433,7 +518,7 @@ export const generateChart = (chartType, svg, g, data, width, height, enableLine
 
   switch (chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height, enableLineDrawing, priceAxiesRef);
+      return generateLineChart(svg, newG, data, width, height, priceAxiesRef);
     case 'candlestick':
       return generateCandleStickChart(svg, newG, data, width, height);
     default:
