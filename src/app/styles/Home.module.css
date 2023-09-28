@@ -49,6 +49,12 @@
   background:#c6c6c6;
   border-radius: 9px;
 }
+
+.icon_button_enabled{
+
+  background:#c6c6c6;
+  border-radius: 9px;
+}
 .icon_button img {
   width: 100%;
   height: 100%;

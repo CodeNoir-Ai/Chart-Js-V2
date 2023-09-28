@@ -194,6 +194,7 @@ const D3JS = () => {
           <Chartleft
             toggleChartType={toggleChartType}
             toggleLineDrawing={toggleLineDrawing}
+            enableLineDrawing={enableLineDrawing}
           />
           <div ref={chartRef}></div>
 

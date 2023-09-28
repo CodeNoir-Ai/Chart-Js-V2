@@ -2,7 +2,7 @@ import styles from '../../styles/Home.module.css'
 
 
 
-export default function Chartleft({ toggleChartType, toggleLineDrawing }) {
+export default function Chartleft({ toggleChartType, toggleLineDrawing, enableLineDrawing }) {
     return (
 
         <div>
@@ -18,7 +18,7 @@ export default function Chartleft({ toggleChartType, toggleLineDrawing }) {
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><g fill="black"><path d="M18 15h8v-1h-8z"></path><path d="M14 18v8h1v-8zM14 3v8h1v-8zM3 15h8v-1h-8z"></path></g></svg>
                 </button>
 
-                <button onMouseDown={toggleLineDrawing} className={styles.icon_button}>
+                <button onMouseDown={toggleLineDrawing} className= {enableLineDrawing ? styles.icon_button_enabled : styles.icon_button}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><g fill="black" fill-rule="nonzero"><path d="M7.354 21.354l14-14-.707-.707-14 14z"></path><path d="M22.5 7c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm0 1c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5zM5.5 24c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm0 1c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5z"></path></g></svg>
                 </button>
                 <button className={styles.icon_button}>
