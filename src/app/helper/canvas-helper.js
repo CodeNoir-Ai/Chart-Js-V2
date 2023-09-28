@@ -38,10 +38,10 @@ export const manageLineDrawing = (svg, g, zoomRect, enableLineDrawing) => {
           .attr("y2", y2)
           .attr("stroke", "black")
           .attr("stroke-width", 1.5);
-          
+
 
         console.log("finished drawing")
-        listLines.push({ x1: x1, x2: x2, y1: y1, y2: y2})
+        listLines.push({ x1: x1, x2: x2, y1: y1, y2: y2 })
         console.log(listLines)
 
 
@@ -342,13 +342,34 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
       .attr("stroke-width", 1.5)
     */
 
-  const drawlines = g.selectAll('.draw-line')
+
+  //const drawlines = g.selectAll('.draw-line');
+  /*
+  if (listLines) {
+  console.log("lines")
+  console.log(listLines)
+  
+  listLines.forEach(function (line) {
+    g.append("line")
+      .attr("class", "draw-line")
+      .attr("x1", line.x1)
+      .attr("y1", line.y1)
+      .attr("x2", line.x2)
+      .attr("y2", line.y2)
+      .attr("stroke", "black")
+      .attr("stroke-width", 1.5);
+  });
+  
+  
+  }
+  */
 
   if (listLines) {
     console.log("lines")
     console.log(listLines)
 
     listLines.forEach(function (line) {
+
       g.append("line")
         .attr("class", "draw-line")
         .attr("x1", line.x1)
@@ -357,9 +378,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
         .attr("y2", line.y2)
         .attr("stroke", "black")
         .attr("stroke-width", 1.5);
-    });
-
-
+    })
   }
 
 
@@ -370,16 +389,21 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
     // if (transform.x > minTranslateX) {
     //     transform.x = minTranslateX;
     // }
+    
     const newX = transform.rescaleX(x);
     const newWidth = initialWidth * Math.sqrt(transform.k);
     g.select(".x-axis").call(xAxis.scale(newX));
     bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
       .attr("width", newWidth);
+
+      
     lines.attr("x1", d => newX(new Date(d.Date)))
       .attr("x2", d => newX(new Date(d.Date)));
+      
 
 
-    drawlines.attr("x1", d => newX(new Date(d.Date)))
+    const drawlines = g.selectAll('.draw-line');
+    drawlines.attr(`transform`, transform.toString());
     //.attr("y2", d => newX(new Date(d.Date)));
 
 
