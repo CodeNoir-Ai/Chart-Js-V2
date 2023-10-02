@@ -63,9 +63,6 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, x, y, tren
             .attr("stroke-width", 1.5);
 
 
-            trendLines.push({
-              10
-            })
 
 
           lineStartPoint = null;
