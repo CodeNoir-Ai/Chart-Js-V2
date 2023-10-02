@@ -12,15 +12,29 @@ const D3JS = () => {
   const [data, setData] = useState([]);  // State to hold fetched data
   const zoomRectRef = useRef(null);
 
+  //Toggleing States between Indicators
+  const [showMovingAverage, setShowMovingAverage] = useState(false);
+  const [showExponentialMovingAverage, setShowExponentialMovingAverage] = useState(false);
+
 
   const toggleLineDrawing = () => {  // 2. Add toggle function
     setEnableLineDrawing(!enableLineDrawing);
   };
+  function toggleMovingAverage() {
+    setShowMovingAverage(!showMovingAverage)
+  }
+  function toggleExponentialMovingAverage() {
+    setShowExponentialMovingAverage(!showExponentialMovingAverage)
+    console.log(showExponentialMovingAverage)
+  }
+  
+  
 
 
   useEffect(() => {
 
     d3.select(chartRef.current).selectAll("*").remove();
+    d3.select(chartRef.current).style("cursor", "crosshair");
 
     //TODO can we calculate this instead of hard code?
     const margin = { top: 30, right: 80, bottom: 40, left: 53 };
@@ -125,15 +139,15 @@ const D3JS = () => {
       const newG = svg.append("g").attr("transform", "translate(0, 0)");
 
       // Call the generateLineChart function with new dimensions
-      generateChart(chartType, svg, newG, data, newWidth, newHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg);
+      generateChart(chartType, svg, newG, data, newWidth, newHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage);
     };
 
 
 
-
+ 
 
     // Initial chart drawing
-    generateChart(chartType, svg, g, data, initialWidth, initialHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg);
+    generateChart(chartType, svg, g, data, initialWidth, initialHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage);
 
     // Attach resize event listener
     window.addEventListener('resize', handleResize);
@@ -153,10 +167,15 @@ const D3JS = () => {
 useEffect(() => {
   // Select the existing SVG and group elements
   const svg = d3.select(chartRef.current).select('svg').select('g');
-  console.log(enableLineDrawing)
   // Assuming you have a rect for zooming in your SVG
   const zoomRect = svg.select("rect");
+  const overlay = svg.select(".overlay");
 
+  if (overlay.empty()) {
+    console.warn("No overlay found");
+    return;
+  }
+  
   // Check if zoomRect exists
   if (zoomRect.empty()) {
     console.warn("No zoomRect found");
@@ -164,14 +183,49 @@ useEffect(() => {
   }
 
   // Remove existing event listeners to avoid duplication
+  overlay.on("mousedown", null);
+  overlay.on("mousemove", null);
+
   zoomRect.on("mousedown", null);
-  zoomRect.on("mousemove", null);
+  zoomRect.on("mousemove", null); 
 
   // Re-attach event listeners if line drawing is enabled
   if (enableLineDrawing) {
-    manageLineDrawing(svg, svg.select('g'), zoomRect, enableLineDrawing);
+    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, "trend");
   }
+
+
 }, [enableLineDrawing]);
+
+useEffect(() => {
+  // Select the existing SVG and group elements
+  const svg = d3.select(chartRef.current).select('svg').select('g');
+
+  // Check if the SVG and group elements are available
+  if (!svg.empty()) {
+    if (showMovingAverage) {
+      // If showMovingAverage is true, display the moving average line
+      svg.select("#movingAverageLine").style("display", null); // or "block"
+    } else {
+      // If showMovingAverage is false, hide the moving average line
+      svg.select("#movingAverageLine").style("display", "none");
+    }
+
+    if(showExponentialMovingAverage){
+      svg.select("#expmovingAverageLine").style("display", null); // or "block"
+
+    }else { 
+      svg.select("#expmovingAverageLine").style("display", "none");
+
+    }
+
+  } else {
+    console.warn("SVG or group element not found");
+  }
+}, [showMovingAverage, showExponentialMovingAverage, chartRef]);
+
+
+
 
 
   const toggleChartType = () => {
@@ -185,7 +239,13 @@ useEffect(() => {
       </div>
 
       <div className="chart-wrapper">
-        <div className="chart-container">
+      <div className="chart-modal">
+        <div className = "chart-inner-wrapper">
+        <button onClick={toggleMovingAverage}>Toggle SMA</button>
+        <button onClick={toggleExponentialMovingAverage}>Toggle EMA</button>
+        </div>
+
+          <div className = "chart-container">
           <Chartleft
             toggleChartType={toggleChartType}
             toggleLineDrawing={toggleLineDrawing}
@@ -194,6 +254,8 @@ useEffect(() => {
 
           <div className="price-axies-container" ref={priceAxiesRef}></div>
         </div>
+        </div>
+
       </div>
 
     </div>
