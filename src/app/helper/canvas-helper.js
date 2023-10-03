@@ -11,7 +11,7 @@ import next from 'next';
  * @param {Number} height - The height of the SVG element.
  */
 
-export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, x, y, trendLines, drawingType = 'trend') => {
+export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingType = 'trend', xScale, yScale, trendLinesData ) => {
 
 
   let lineStartPoint = null;
@@ -19,14 +19,12 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, x, y, tren
   const width = svg.node().getBoundingClientRect().width;
   const height = svg.node().getBoundingClientRect().height;
 
-  let xScale = x;
-  let yScale = y;
 
 
-  console.log(trendLines)
 
 
   if (enableLineDrawing) {
+
   
     overlay.on("click", (event) => {
       if (!enableLineDrawing) return;
@@ -35,10 +33,23 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, x, y, tren
       const mouseX = mx;
       const mouseY = my;
 
+
+      //Convert pixel-space to data space 
+    
+      const dataX = xScale.invert(150)
+      const dataY = yScale.invert(150)
+
+
+
+      console.log("logign Data X", dataX, "Loggin dataY", dataY)
+
+
+
+
       
 
       if (!lineStartPoint) {
-        lineStartPoint = { x: mouseX, y: mouseY };
+        lineStartPoint = { x: mouseX, y: mouseY, dataX, dataY };
 
         tempLine = g.append("line")
           .attr("class", "temp-line")
@@ -63,6 +74,9 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, x, y, tren
             .attr("stroke-width", 1.5);
 
 
+
+          const lineEndPointData = { x: dataX, y: dataY };
+          trendLinesData.push({ start: lineStartPoint, end: lineEndPointData });
 
 
           lineStartPoint = null;
@@ -520,11 +534,9 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
   const yAxis = d3.axisLeft(y);
 
   
-  //Handling the Storring of Trendlines here
-  let trendLines = []
 
-
-
+  console.log("In the generate line fucntion", x.invert(150))
+  
 
   const zoomRect = g.append("rect")
     .attr("width", width)
@@ -638,7 +650,7 @@ const overlay = g.append("rect")
 
 
   // console.log(x.invert(150), "This is hte xcale with date")
-  manageLineDrawing(svg, g, overlay, enableLineDrawing, x, y, trendLines);
+  manageLineDrawing(svg, g, overlay, enableLineDrawing);
 
 // calculates simple moving average over 50 days
 const movingAverageData = movingAverage(data, 50);

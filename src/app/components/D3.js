@@ -12,6 +12,13 @@ const D3JS = () => {
   const [data, setData] = useState([]);  // State to hold fetched data
   const zoomRectRef = useRef(null);
 
+  //getting the intial redering of the x and Y scales 
+  const xScaleRef = useRef();
+  const yScaleRef = useRef()
+
+  //Storing the trend lines in states
+  const [trendLinesData, setTrendLinesData] = useState([])
+
   //Toggleing States between Indicators
   const [showMovingAverage, setShowMovingAverage] = useState(false);
   const [showExponentialMovingAverage, setShowExponentialMovingAverage] = useState(false);
@@ -25,7 +32,6 @@ const D3JS = () => {
   }
   function toggleExponentialMovingAverage() {
     setShowExponentialMovingAverage(!showExponentialMovingAverage)
-    console.log(showExponentialMovingAverage)
   }
   
   
@@ -63,19 +69,6 @@ const D3JS = () => {
         console.error('Error fetching data:', error);
       });
 
-    // const parsedData = MainData.map(d => {
-    //   const date = new Date(d.Date);
-    //   const open = +d.Open;
-    //   const high = +d.High;
-    //   const low = +d.Low;
-    //   const close = +d.Close;
-    //   if (!date || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
-    //     console.error('Invalid data entry:', d);
-    //     return null;
-    //   }
-    //   return { Date: date, Open: open, High: high, Low: low, Close: close };
-    // }).filter(Boolean);
-    // setData(parsedData);
 
 
 
@@ -92,6 +85,19 @@ const D3JS = () => {
     // Get initial dimensions
     const initialWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
     const initialHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
+
+
+
+
+    const xscale = d3.scaleUtc()
+    .domain(d3.extent(data, d => d.Date))
+    .range([0, initialWidth])
+  
+      
+    let xScaleRef = xscale;
+
+     
+        
 
     // Create SVG element
     const svgContainer = svgDiv.append('svg')
@@ -144,8 +150,6 @@ const D3JS = () => {
 
 
 
- 
-
     // Initial chart drawing
     generateChart(chartType, svg, g, data, initialWidth, initialHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage);
 
@@ -165,11 +169,16 @@ const D3JS = () => {
   // Add this useEffect to your existing component
 // Second useEffect for line drawing
 useEffect(() => {
+  const margin = { top: 30, right: 80, bottom: 40, left: 53 };
+
   // Select the existing SVG and group elements
   const svg = d3.select(chartRef.current).select('svg').select('g');
   // Assuming you have a rect for zooming in your SVG
   const zoomRect = svg.select("rect");
   const overlay = svg.select(".overlay");
+
+  console.log(xScaleRef.invert(150), "Loggin teh ref")
+
 
   if (overlay.empty()) {
     console.warn("No overlay found");
@@ -191,7 +200,7 @@ useEffect(() => {
 
   // Re-attach event listeners if line drawing is enabled
   if (enableLineDrawing) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, "trend");
+    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, "trend", x, y, trendLinesData);
   }
 
 
@@ -200,6 +209,9 @@ useEffect(() => {
 useEffect(() => {
   // Select the existing SVG and group elements
   const svg = d3.select(chartRef.current).select('svg').select('g');
+
+
+
 
   // Check if the SVG and group elements are available
   if (!svg.empty()) {
