@@ -177,7 +177,6 @@ useEffect(() => {
   const zoomRect = svg.select("rect");
   const overlay = svg.select(".overlay");
 
-  console.log(xScaleRef.invert(150), "Loggin teh ref")
 
 
   if (overlay.empty()) {
@@ -200,7 +199,7 @@ useEffect(() => {
 
   // Re-attach event listeners if line drawing is enabled
   if (enableLineDrawing) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, "trend", x, y, trendLinesData);
+    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, "trend");
   }
 
 

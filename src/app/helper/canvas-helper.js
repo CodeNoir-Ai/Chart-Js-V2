@@ -11,7 +11,7 @@ import next from 'next';
  * @param {Number} height - The height of the SVG element.
  */
 
-export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingType = 'trend', xScale, yScale, trendLinesData ) => {
+export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingType = 'trend') => {
 
 
   let lineStartPoint = null;
@@ -36,20 +36,14 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingTyp
 
       //Convert pixel-space to data space 
     
-      const dataX = xScale.invert(150)
-      const dataY = yScale.invert(150)
-
-
-
-      console.log("logign Data X", dataX, "Loggin dataY", dataY)
+  
 
 
 
 
-      
 
       if (!lineStartPoint) {
-        lineStartPoint = { x: mouseX, y: mouseY, dataX, dataY };
+        lineStartPoint = { x: mouseX, y: mouseY};
 
         tempLine = g.append("line")
           .attr("class", "temp-line")
@@ -75,8 +69,7 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingTyp
 
 
 
-          const lineEndPointData = { x: dataX, y: dataY };
-          trendLinesData.push({ start: lineStartPoint, end: lineEndPointData });
+          
 
 
           lineStartPoint = null;
