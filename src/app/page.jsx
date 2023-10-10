@@ -1,9 +1,11 @@
 "use client";
 
 import D3JS from "./components/D3";
-
+import {FinancialChartComponent} from "./components/ChartComponent/Chart";
 import Head from "next/head";
-
+import Mainfile from './components/Main.js'
+import { Main } from "next/document";
+import Nav from "./components/Navbar.js"
 export default function Home() {
   return (
     <div>
@@ -17,6 +19,8 @@ export default function Home() {
       {/* <ChartComponent /> */}
 
       {/* <TradingChart /> */}
+
+    <Nav />
 
       <div>
         {/* <Chartleft /> */}

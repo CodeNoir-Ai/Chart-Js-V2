@@ -1,7 +1,4 @@
-import styles from '../../styles/chart.module.css'
 import Image from 'next/image';
-import searchIcon from '../../public/assets/search-icon.png'
-import addIcon from '../../public/assets/add-icon.png';
 
 export default function Nav()
 { 

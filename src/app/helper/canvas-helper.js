@@ -11,7 +11,59 @@ import next from 'next';
  * @param {Number} height - The height of the SVG element.
  */
 
-export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingType = 'trend') => {
+
+
+const movingAverage = (data, numberOfPricePoints) => {
+  return data.map((row, index, total) => {
+    const start = Math.max(0, index - numberOfPricePoints);
+    const end = index;
+    const subset = total.slice(start, end + 1);
+    const sum = subset.reduce((a, b) => {
+      return a + b['Close'];
+    }, 0);
+    return {
+      date: row['Date'],
+      average: sum / subset.length
+    };
+  });
+};
+
+//Calculate the Exponential moving averagae.
+const exponentialMovingAverage = (data, numberOfPricePoints) => {
+
+  let emaArray = [];
+  let previousEma;
+
+  const alpha = 2 / (numberOfPricePoints + 1);
+
+  for (let i = 0; i < data.length; i++) {
+    if (i < numberOfPricePoints) {
+      // For the initial data points where EMA can't be computed, we'll use SMA as a starting point
+      const subset = data.slice(0, i + 1);
+      const sum = subset.reduce((a, b) => a + b['Close'], 0);
+      previousEma = sum / subset.length;
+    } else {
+      // Calculate EMA
+      previousEma = (data[i]['Close'] * alpha) + (previousEma * (1 - alpha));
+    }
+
+    emaArray.push({
+      date: data[i]['Date'],
+      average: previousEma
+    });
+  }
+
+  return emaArray;
+};
+
+
+
+
+
+//REMEMBER TO REFACTOR TO REPAT EVENT HANDLES AND SWitCH TO CASE
+let lineData = null;
+
+export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTool, x, y, drawingType = 'trend') => {
 
 
   let lineStartPoint = null;
@@ -19,7 +71,59 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingTyp
   const width = svg.node().getBoundingClientRect().width;
   const height = svg.node().getBoundingClientRect().height;
 
+  const xScale = x
+  const yScale = y
 
+
+  console.log(xScale, yScale, "this is in the enableline");
+
+
+if(showTextTool){ 
+
+
+      
+    overlay.on("click", (event) => {
+      if (!showTextTool) return;
+
+      const [mx, my] = d3.pointer(event);
+
+
+
+         // Assuming you have a reference to your text-tool-container
+    const textToolContainer = d3.select(".text-tool-container");
+
+    overlay.on("click", (event) => {
+        const [mx, my] = d3.pointer(event);
+
+
+
+        // Show the text-tool-container
+        textToolContainer.style("display", "flex");
+
+        // Create or select the SVG text element
+        const svgText = overlay.select("text").empty() 
+        ? svg.append("text")
+            .attr("x", mx)
+            .attr("y", my)
+            .attr("fill", "#fff")
+            .attr("dy", "0.35em")          // Adjust vertical position
+        : svg.select("text")
+            .attr("x", mx)
+            .attr("y", my)
+            .attr("dy", "0.35em");         // Adjust vertical position
+
+        // Attach input event listener to the textarea
+        d3.select(".text-area").on("input", function() {
+          
+            const value = d3.select(this).property("value");
+            console.log(value)
+            svgText.text(value);
+        });
+    });
+
+    })
+ 
+}
 
 
 
@@ -35,15 +139,22 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingTyp
 
 
       //Convert pixel-space to data space 
-    
-  
-
-
-
 
 
       if (!lineStartPoint) {
         lineStartPoint = { x: mouseX, y: mouseY};
+        // console.log(xScale.invert(100), yScale, "this is in the jkhjk");
+
+
+        // const dataXStart = x.invert(lineStartPoint.x);
+        // const dataYStart = y.invert(lineStartPoint.y);
+
+          // lineData = {
+          //   startX: dataXStart,
+          //   startY: dataYStart,
+          //   endX: dataXEnd,
+          //   endY: dataYEnd
+          // };
 
         tempLine = g.append("line")
           .attr("class", "temp-line")
@@ -251,7 +362,8 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingTyp
           });
 
       
-        }else if  (drawingType == "vertical") { 
+        }
+        else if  (drawingType == "vertical") { 
           let verticalLine = null;
 
           overlay.on("click", (event) => {
@@ -458,59 +570,18 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, drawingTyp
 };
 
 
-const movingAverage = (data, numberOfPricePoints) => {
-  return data.map((row, index, total) => {
-    const start = Math.max(0, index - numberOfPricePoints);
-    const end = index;
-    const subset = total.slice(start, end + 1);
-    const sum = subset.reduce((a, b) => {
-      return a + b['Close'];
-    }, 0);
-    return {
-      date: row['Date'],
-      average: sum / subset.length
-    };
-  });
-};
-
-//Calculate the Exponential moving averagae.
-
-const exponentialMovingAverage = (data, numberOfPricePoints) => {
-  let emaArray = [];
-  let previousEma;
-
-  const alpha = 2 / (numberOfPricePoints + 1);
-
-  for (let i = 0; i < data.length; i++) {
-    if (i < numberOfPricePoints) {
-      // For the initial data points where EMA can't be computed, we'll use SMA as a starting point
-      const subset = data.slice(0, i + 1);
-      const sum = subset.reduce((a, b) => a + b['Close'], 0);
-      previousEma = sum / subset.length;
-    } else {
-      // Calculate EMA
-      previousEma = (data[i]['Close'] * alpha) + (previousEma * (1 - alpha));
-    }
-
-    emaArray.push({
-      date: data[i]['Date'],
-      average: previousEma
-    });
-  }
-
-  return emaArray;
-};
 
 
 
-export const generateLineChart = (svg, g, data, width, height, enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage ) => {
+
+export const generateLineChart = (svg, g, data, width, height,svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage ) => {
   // Create scales
   g.selectAll('*').remove();
   d3.select(priceAxiesRef.current).selectAll("*").remove();
 
   const x = d3.scaleUtc()
     .domain(d3.extent(data, d => d.Date))
-    .range([0, width])
+    .range([0, width + 200])
  
 
   const y = d3.scaleLinear()
@@ -528,7 +599,6 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
   
 
-  console.log("In the generate line fucntion", x.invert(150))
   
 
   const zoomRect = g.append("rect")
@@ -551,7 +621,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
   // Add y-axis grid lines
   const yAxisGrid = d3.axisLeft(y)
-    .tickSize(-width)
+    .tickSize(-width - 500)
     .tickFormat('')
     .ticks(10);
 
@@ -563,6 +633,8 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
   const yAxisGroup = g.append("g")
     .attr("class", "y-axis")
     .attr("transform", `translate(${width}, 0)`)
+    .attr('stroke', 'rgba(255, 255, 255, 0.1)')  // White with 20% opacity
+    .attr('stroke-width', 1);
   //Draws the y axies 
   //  .call(d3.axisRight(y)); 
 
@@ -570,14 +642,16 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
 
 
+  //This controls the data labels
   const xAxisGroup = g.append("g")
     .attr("class", "x-axis")
-    .attr("transform", `translate(0,${height})`)
+    .attr("transform", `translate(0,${svgContainerHeight - 75 - 15})`)
     .call(d3.axisBottom(x));
 
 
 
   xAxis.tickSize(-height)
+  
 
 
 
@@ -594,25 +668,25 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
     .style("display", "none");
 
   // Add dots
-  g.selectAll(".dot")
-    .data(data)
-    .enter().append("circle")
-    .attr("class", "dot")
-    .attr("cx", d => x(d.Date))  // Make sure the attribute names match your data
-    .attr("cy", d => y(d.Close))
-    .attr("r", 3)
-    .on('mouseover', (event, d) => {
-      tooltip.style('display', 'block')
-        .html(`
-            <div>Date: ${d.Date}</div>
-            <div>Close Price: ${d.Close}</div>
-          `)
-        .style('left', (event.pageX + 15) + 'px')
-        .style('top', (event.pageY - 28) + 'px');
-    })
-    .on('mouseout', () => {
-      tooltip.style('display', 'none');
-    });
+  // g.selectAll(".dot")
+  //   .data(data)
+  //   .enter().append("circle")
+  //   .attr("class", "dot")
+  //   .attr("cx", d => x(d.Date))  // Make sure the attribute names match your data
+  //   .attr("cy", d => y(d.Close))
+  //   .attr("r", 3)
+  //   .on('mouseover', (event, d) => {
+  //     tooltip.style('display', 'block')
+  //       .html(`
+  //           <div>Date: ${d.Date}</div>
+  //           <div>Close Price: ${d.Close}</div>
+  //         `)
+  //       .style('left', (event.pageX + 15) + 'px')
+  //       .style('top', (event.pageY - 28) + 'px');
+  //   })
+  //   .on('mouseout', () => {
+  //     tooltip.style('display', 'none');
+  //   });
 
   // Add crosshair
   const crosshair = g.append('g').style('display', 'none');
@@ -632,7 +706,7 @@ export const generateLineChart = (svg, g, data, width, height, enableLineDrawing
 
 // Append a transparent overlay rectangle on top of everything
 const overlay = g.append("rect")
-  .attr("width", width)
+  .attr("width", width + 200)
   .attr("height", height)
   .attr("fill", "none")
   .attr("class", "overlay")  // <-- Add this line
@@ -643,7 +717,7 @@ const overlay = g.append("rect")
 
 
   // console.log(x.invert(150), "This is hte xcale with date")
-  manageLineDrawing(svg, g, overlay, enableLineDrawing);
+  manageLineDrawing(svg, g, overlay, enableLineDrawing, x, y);
 
 // calculates simple moving average over 50 days
 const movingAverageData = movingAverage(data, 50);
@@ -719,7 +793,18 @@ if(showExponentialMovingAverage)
     });
     
 
-    
+      if (lineData) {
+      const newXStart = x(lineData.startX);
+      const newYStart = y(lineData.startY);
+      const newXEnd = x(lineData.endX);
+      const newYEnd = y(lineData.endY);
+
+      g.select(".draw-line")  // or whatever class you've given your permanent line
+        .attr("x1", newXStart)
+        .attr("y1", newYStart)
+        .attr("x2", newXEnd)
+        .attr("y2", newYEnd);
+    }
 
     
     movingAverageLine.x(d => newX(d.date));
@@ -754,42 +839,53 @@ g.call(zoom);
       .attr('y', y(tick) + 40)  // Use the same y scale
       .attr('dy', '.35em')
       .attr('text-anchor', 'start')
+      .attr('stroke-width', 1)
+      .selectAll("line")
+      .style("stroke", "rgba(255, 255, 255, 0.2)") // White
       .text(tick);
   });
 
     
 
 
+  function setupTooltip(svg,width,height)
+  { 
+    const tooltipLineX = g.append("line")
+    .attr("class", "tooltip-line")
+    .style('pointer-events','none')
+    .attr("id", "tooltip-line-x")
+    .attr("stroke", "grey")
+    
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "2,2");
   
-  const tooltipLineX = g.append("line")
-  .attr("class", "tooltip-line")
-  .style('pointer-events','none')
-  .attr("id", "tooltip-line-x")
-  .attr("stroke", "grey")
-  .attr("stroke-width", 1)
-  .attr("stroke-dasharray", "2,2");
+  const tooltipLineY = g.append("line")
+    .attr("class", "tooltip-line")
+    .style('pointer-events','none')
+    .attr("id", "tooltip-line-y")
+    .attr("stroke", "grey")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "2,2");
+  
+  
+    
+  
+  // Attach the mousemove event to the overlay
+  svg.on("mousemove", function (event) {
+    const [xCoord, yCoord] = d3.pointer(event, this);
+    // Update the position of the red lines to extend from the mouse position
+    tooltipLineX.attr("x1", xCoord).attr("x2", xCoord).attr("y1", 0).attr("y2", height);
+    tooltipLineY.attr("y1", yCoord).attr("y2", yCoord).attr("x1", 0).attr("x2", width + 200);
+  
+  });
+  
+  };
+  setupTooltip(g, width, height);
 
-const tooltipLineY = g.append("line")
-  .attr("class", "tooltip-line")
-  .style('pointer-events','none')
-  .attr("id", "tooltip-line-y")
-  .attr("stroke", "grey")
-  .attr("stroke-width", 1)
-  .attr("stroke-dasharray", "2,2");
 
-
+  }
   
 
-// Attach the mousemove event to the overlay
-svg.on("mousemove", function (event) {
-  const [xCoord, yCoord] = d3.pointer(event, this);
-  // Update the position of the red lines to extend from the mouse position
-  tooltipLineX.attr("x1", xCoord).attr("x2", xCoord).attr("y1", 0).attr("y2", height);
-  tooltipLineY.attr("y1", yCoord).attr("y2", yCoord).attr("x1", 0).attr("x2", width);
-
-});
-
-};
 
 
 export const generateCandleStickChart = (svg, g, data, width, height) => {
@@ -820,12 +916,13 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
   const yAxisGrid = d3.axisRight(y)  // Use axisRight instead of axisLeft
     .tickSize(width)  // Positive width to extend grid lines across the chart
     .tickFormat('')
-    .ticks(10);
+    .ticks(10)
+
 
   g.append("g")
-    .attr("class", "y-grid")
-    .attr("transform", `translate(0, 0)`)  // No need to translate
-    .call(yAxisGrid);
+  .attr("class", "y-grid")
+  .call(yAxisGrid)
+  .selectAll("line")
 
 
 
@@ -934,7 +1031,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
 
 // This generates the specific Chart Based on selection
-export const generateChart = (chartType, svg, g, data, width, height, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage) => {
+export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage) => {
   // Clear previous chart elements
   svg.selectAll('*').remove();
 
@@ -943,7 +1040,7 @@ export const generateChart = (chartType, svg, g, data, width, height, enableLine
 
   switch (chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage);
+      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage);
     case 'candlestick':
       return generateCandleStickChart(svg, newG, data, width, height);
     default:

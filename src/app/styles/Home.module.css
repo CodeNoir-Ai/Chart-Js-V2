@@ -14,15 +14,20 @@
   grid-template-columns: 50px 2fr .6fr 50px;
 }
 
+/* ChartLeft Button Stylings */
 .button_wrapper{
   padding: 15px 0px;
-  background-color: #F5F5F5;
-  height: 100%;
+  background-color: rgba(123, 123, 123, 0.555);
+  border: 1px solid #fff;
+  filter: blur(0.5px);
+  /* height: 100%; */
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   z-index: 200;
+  border-radius: 10px;
+  margin-left: 15px;
 }
 .button_wrapper ul { 
   padding-left: 0px;
@@ -42,12 +47,18 @@
   border: none;
   cursor: pointer;
 }
+
+.line_active_icon{
+  background: rgba(173, 190, 231, 0.597);
+  border-radius: 5px;
+
+}
 .button_widthFixed{
   width: 40px;
 }
 .icon_button:hover{
-  background:#c6c6c6;
-  border-radius: 9px;
+  background: rgba(173, 190, 231, 0.597);
+  border-radius: 5px;
 }
 .icon_button img {
   width: 100%;
@@ -61,3 +72,47 @@
   flex-direction: column;
   align-items: center;
 }
+
+
+.container {
+  position: relative;
+}
+
+.popup {
+  position: absolute;
+  height: 500px;
+  top: 60px;
+  left: 59px;
+  width: 230px;
+  display: none !important; 
+  background: #252525a3;
+  border-right: 1px solid rgb(95 95 95 / 78%);
+  box-shadow: 0 0 8px 1px rgba(0,0,0,.1);
+  display: flex;
+  flex-direction: column;
+  color: white;
+  font-size: 16px;
+  border-radius: 5px;
+
+}
+
+.popup.show {
+  display: block;
+}
+.btn_selectors { 
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  height: 45px;
+  
+}
+.btn_selectors:hover{
+  background: rgba(75, 135, 80, 0.597);
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+
+
+
+/* Chart Left Button Stylibgs */
