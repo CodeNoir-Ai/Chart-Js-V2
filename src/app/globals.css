@@ -290,7 +290,7 @@ text{
   border-top-left-radius: 6px;
   border: 1px solid rgb(89 89 89 / 74%);
   position: relative;
-  background: transparent;
+  background: #050505ca;
   z-index: 888;
   display: flex;
   gap: 10px;
@@ -335,6 +335,8 @@ text{
   border-top: none !important;
   border: 1px solid rgb(89 89 89 / 74%);
   border-radius: 5px;
+  background: url('../../public/chart_assets/bamboo_bg.png');
+  background-position: center center;
 
 }
 

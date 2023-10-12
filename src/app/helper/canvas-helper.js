@@ -3,6 +3,7 @@ import exp from 'constants';
 import * as d3 from 'd3';
 import _, { maxBy } from 'lodash';
 import next from 'next';
+import { Line } from 'react-chartjs-2';
 
 /**
  * @param {Object} svg - The D3 Selection for the SVG element to draw in.
@@ -62,8 +63,13 @@ const exponentialMovingAverage = (data, numberOfPricePoints) => {
 
 //REMEMBER TO REFACTOR TO REPAT EVENT HANDLES AND SWitCH TO CASE
 let lineData = null;
+let lineID = 0
+let trendLines = []
 
-export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTool, x, y, drawingType = 'trend') => {
+// Handling Temp Trend Lines IDS(How can we implement to scale these?)
+
+export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTool, showFib, drawingType, x , y) => {
+
 
 
   let lineStartPoint = null;
@@ -71,19 +77,35 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTo
   const width = svg.node().getBoundingClientRect().width;
   const height = svg.node().getBoundingClientRect().height;
 
-  const xScale = x
-  const yScale = y
+
+  let xScale = null
+  let yScale = null
+
+  //Get the current zoom position to account for the translatting zoom
 
 
-  console.log(xScale, yScale, "this is in the enableline");
+
+  if(x){
+  
+
+    xScale = x;
+    yScale = y;
+  }
+
 
 
 if(showTextTool){ 
 
+  if(showTextTool === false){
+    return
+  }
+
 
       
     overlay.on("click", (event) => {
-      if (!showTextTool) return;
+      if(showTextTool === false){
+        return
+      }
 
       const [mx, my] = d3.pointer(event);
 
@@ -105,7 +127,7 @@ if(showTextTool){
         ? svg.append("text")
             .attr("x", mx)
             .attr("y", my)
-            .attr("fill", "#fff")
+            .attr("fill", "white")
             .attr("dy", "0.35em")          // Adjust vertical position
         : svg.select("text")
             .attr("x", mx)
@@ -116,7 +138,6 @@ if(showTextTool){
         d3.select(".text-area").on("input", function() {
           
             const value = d3.select(this).property("value");
-            console.log(value)
             svgText.text(value);
         });
     });
@@ -127,34 +148,180 @@ if(showTextTool){
 
 
 
+
+
+
+
+if(showFib){
+
+  if(showFib === false){
+    return
+  }
+
+
+
+    let startPoint = null;
+    let endPoint = null;
+    let tempLines = []
+    let tempRects = []
+    const fibColors = ["orange", "pink", "blue", "green", "purple"]; 
+
+    const fibLevels = [0, 0.236, 0.382, 0.5, 0.618, 1];
+
+    overlay.on("click", (event) => {
+        const [mx, my] = d3.pointer(event);
+
+        if (!startPoint) {
+            // Capture the starting point
+            startPoint = { x: mx, y: my };
+
+            //Create etemp lines for each Fib level
+            fibLevels.forEach((level, index) =>  { 
+              const tempLine = g.append("line")
+                .attr("x1", mx)
+                .attr("y1", my)
+                .attr("x2", width)
+                .attr("y2", my)
+                .attr("stroke", "blue")
+                .attr("stroke-width", 1.5)
+              tempLines.push(tempLine)
+
+              if(index < fibLevels.length - 1 ) { 
+                const tempRect = g.append("rect")
+                .attr("x", mx) 
+                .attr("y", my)
+                .attr("width", width)
+                .attr("height", 0)
+                .attr("fill", fibColors[index])
+                .attr("opacity", 0.5)
+              tempRects.push(tempRect)
+              }
+
+            })
+
+
+        } else {
+
+          //Remove the Temp lines 
+          tempLines.forEach(line => line.remove())
+          tempRects.forEach(rect => rect.remove())
+          tempLines = []
+          tempRects = []
+
+
+            // Capture the ending point
+            endPoint = { x: mx, y: my };
+
+
+            //Determine the direction of the drawing 
+            const direction = mx < startPoint.x ? "left" : "right";
+
+          
+            // Calculate the difference between start and end y-coordinates
+            const yDiff = endPoint.y - startPoint.y;
+            // Draw horizontal lines at Fibonacci levels
+            fibLevels.forEach((level, index) => {
+                const y = startPoint.y + yDiff * level;
+                let lineX1, lineX2, rectX, rectWidth;
+
+                if (direction === "left") {
+                  lineX1 = 0;
+                  lineX2 = startPoint.x;
+                  rectX = 0;
+                  rectWidth = startPoint.x;
+              } else {
+                  lineX1 = startPoint.x;
+                  lineX2 = width;
+                  rectX = startPoint.x;
+                  rectWidth = width - startPoint.x;
+              }
+
+
+                g.append("line")
+                    .attr("x1", lineX1)
+                    .attr("y1", y)
+                    .attr("x2", lineX2)
+                    .attr("y2", y)
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 1.5)
+
+               if (index < fibLevels.length - 1) {
+               const nextY = startPoint.y + yDiff * fibLevels[index + 1];
+                      g.append("rect")
+                          .attr("x", rectX)
+                          .attr("y", y)
+                          .attr("width", rectWidth)
+                          .attr("height", nextY - y)
+                          .attr("fill", fibColors[index])
+                          .attr("opacity", 0.5);
+                  }
+            });
+
+            // Reset the points for next drawing
+            startPoint = null;
+            // endPoint = null;
+        }
+    });
+      // Update the temporary lines on mouse move  
+      overlay.on("mousemove", (event) => {
+        if (startPoint && tempLines.length) {
+            const [mx, my] = d3.pointer(event);
+            const yDiff = my - startPoint.y;
+            const direction = mx < startPoint.x ? "left" : "right";
+    
+            tempLines.forEach((line, index) => {
+                const y = startPoint.y + yDiff * fibLevels[index];
+                if (direction === "left") {
+                    line.attr("x1", 0).attr("x2", startPoint.x);
+                } else {
+                    line.attr("x1", startPoint.x).attr("x2", width);
+                }
+                line.attr("y1", y).attr("y2", y);
+            });
+    
+            tempRects.forEach((rect, index) => {
+              const y = startPoint.y + yDiff * fibLevels[index];
+              const nextY = startPoint.y + yDiff * fibLevels[index + 1];
+              const rectHeight = Math.abs(nextY - y);
+              const rectY = yDiff >= 0 ? y : y - rectHeight;
+  
+              if (direction === "left") {
+                  rect.attr("x", 0).attr("width", startPoint.x);
+              } else {
+                  rect.attr("x", startPoint.x).attr("width", width - startPoint.x);
+              }
+              rect.attr("y", rectY).attr("height", rectHeight);
+          });
+  
+        }
+    });
+
+}
+
+
+
   if (enableLineDrawing) {
 
-  
     overlay.on("click", (event) => {
       if (!enableLineDrawing) return;
 
       const [mx, my] = d3.pointer(event);
+      const currentTransform = d3.zoomTransform(g.node());
+      const [rawX, rawY] = d3.pointer(event);
+      const transformedX = (rawX - currentTransform.x) / currentTransform.k;
+      const transformedY = (rawY - currentTransform.y) / currentTransform.k;
+
+  
       const mouseX = mx;
       const mouseY = my;
 
 
-      //Convert pixel-space to data space 
+
 
 
       if (!lineStartPoint) {
-        lineStartPoint = { x: mouseX, y: mouseY};
-        // console.log(xScale.invert(100), yScale, "this is in the jkhjk");
+        lineStartPoint = { x: transformedX, y: transformedY};
 
-
-        // const dataXStart = x.invert(lineStartPoint.x);
-        // const dataYStart = y.invert(lineStartPoint.y);
-
-          // lineData = {
-          //   startX: dataXStart,
-          //   startY: dataYStart,
-          //   endX: dataXEnd,
-          //   endY: dataYEnd
-          // };
 
         tempLine = g.append("line")
           .attr("class", "temp-line")
@@ -162,11 +329,14 @@ if(showTextTool){
           .attr("y1", lineStartPoint.y)
           .attr("x2", mx)
           .attr("y2", my)
-          .attr("stroke", "black")
+          .attr("stroke", "white")
           .attr("stroke-width", 1.5)
+
+
 
         
       } else {
+
         if (drawingType === 'trend') {
           tempLine.remove();
           g.append("line")
@@ -175,13 +345,33 @@ if(showTextTool){
             .attr("y1", lineStartPoint.y)
             .attr("x2", mouseX)
             .attr("y2", mouseY)
-            .attr("stroke", "black")
-            .attr("stroke-width", 1.5);
+            .attr("stroke", "red")
+            .attr("stroke-width", 1);
+
+          tempLine.remove();
 
 
 
-          
 
+
+          const dataXStart = x.invert(lineStartPoint.x);
+          const dataYStart = y.invert(lineStartPoint.y);
+          const dataXEnd = x.invert(transformedX);
+          const dataYEnd = y.invert(transformedY);
+
+            lineData = 
+            { 
+              id: lineID++, //Asign and Increment
+              startX: dataXStart,
+              startY: dataYStart,
+              endX: dataXEnd,
+              endY: dataYEnd
+            };
+
+            trendLines.push(lineData)
+
+
+            console.log(lineData, "this is showing current position of the line data")
 
           lineStartPoint = null;
 
@@ -217,7 +407,6 @@ if(showTextTool){
 
             // Reset the starting point
             startPoint = null;
-             // Disable further drawing + Second click
             enableLineDrawing = false;
         }
 
@@ -314,7 +503,7 @@ if(showTextTool){
                       .attr("stroke", "red")
                       .attr("stroke-width", 1.5)
                       // .attr("stroke-dasharray", "4 4");
-                      // enableLineDrawing = false; // Disable line drawing after second click for trend line
+                      enableLineDrawing = false; // Disable line drawing after second click for trend line
 
               }
           }
@@ -421,146 +610,7 @@ if(showTextTool){
 
 
 
-        } else if (drawingType === "fib") {
-          let startPoint = null;
-          let endPoint = null;
-          let tempLines = []
-          let tempRects = []
-          const fibColors = ["orange", "pink", "blue", "green", "purple"]; 
-
-          const fibLevels = [0, 0.236, 0.382, 0.5, 0.618, 1];
-      
-          overlay.on("click", (event) => {
-              const [mx, my] = d3.pointer(event);
-      
-              if (!startPoint) {
-                  // Capture the starting point
-                  startPoint = { x: mx, y: my };
-
-                  //Create etemp lines for each Fib level
-                  fibLevels.forEach((level, index) =>  { 
-                    const tempLine = g.append("line")
-                      .attr("x1", mx)
-                      .attr("y1", my)
-                      .attr("x2", width)
-                      .attr("y2", my)
-                      .attr("stroke", "blue")
-                      .attr("stroke-width", 1.5)
-                    tempLines.push(tempLine)
-
-                    if(index < fibLevels.length - 1 ) { 
-                      const tempRect = g.append("rect")
-                      .attr("x", mx) 
-                      .attr("y", my)
-                      .attr("width", width)
-                      .attr("height", 0)
-                      .attr("fill", fibColors[index])
-                      .attr("opacity", 0.5)
-                    tempRects.push(tempRect)
-                    }
-
-                  })
-
-
-              } else {
-
-                //Remove the Temp lines 
-                tempLines.forEach(line => line.remove())
-                tempRects.forEach(rect => rect.remove())
-                tempLines = []
-                tempRects = []
-
-
-                  // Capture the ending point
-                  endPoint = { x: mx, y: my };
-
-
-                  //Determine the direction of the drawing 
-                  const direction = mx < startPoint.x ? "left" : "right";
-
-                
-                  // Calculate the difference between start and end y-coordinates
-                  const yDiff = endPoint.y - startPoint.y;
-                  // Draw horizontal lines at Fibonacci levels
-                  fibLevels.forEach((level, index) => {
-                      const y = startPoint.y + yDiff * level;
-                      let lineX1, lineX2, rectX, rectWidth;
-
-                      if (direction === "left") {
-                        lineX1 = 0;
-                        lineX2 = startPoint.x;
-                        rectX = 0;
-                        rectWidth = startPoint.x;
-                    } else {
-                        lineX1 = startPoint.x;
-                        lineX2 = width;
-                        rectX = startPoint.x;
-                        rectWidth = width - startPoint.x;
-                    }
-
-
-                      g.append("line")
-                          .attr("x1", lineX1)
-                          .attr("y1", y)
-                          .attr("x2", lineX2)
-                          .attr("y2", y)
-                          .attr("stroke", "blue")
-                          .attr("stroke-width", 1.5)
-
-                     if (index < fibLevels.length - 1) {
-                     const nextY = startPoint.y + yDiff * fibLevels[index + 1];
-                            g.append("rect")
-                                .attr("x", rectX)
-                                .attr("y", y)
-                                .attr("width", rectWidth)
-                                .attr("height", nextY - y)
-                                .attr("fill", fibColors[index])
-                                .attr("opacity", 0.5);
-                        }
-                  });
-      
-                  // Reset the points for next drawing
-                  startPoint = null;
-                  // endPoint = null;
-              }
-          });
-            // Update the temporary lines on mouse move  
-            overlay.on("mousemove", (event) => {
-              if (startPoint && tempLines.length) {
-                  const [mx, my] = d3.pointer(event);
-                  const yDiff = my - startPoint.y;
-                  const direction = mx < startPoint.x ? "left" : "right";
-          
-                  tempLines.forEach((line, index) => {
-                      const y = startPoint.y + yDiff * fibLevels[index];
-                      if (direction === "left") {
-                          line.attr("x1", 0).attr("x2", startPoint.x);
-                      } else {
-                          line.attr("x1", startPoint.x).attr("x2", width);
-                      }
-                      line.attr("y1", y).attr("y2", y);
-                  });
-          
-                  tempRects.forEach((rect, index) => {
-                    const y = startPoint.y + yDiff * fibLevels[index];
-                    const nextY = startPoint.y + yDiff * fibLevels[index + 1];
-                    const rectHeight = Math.abs(nextY - y);
-                    const rectY = yDiff >= 0 ? y : y - rectHeight;
-        
-                    if (direction === "left") {
-                        rect.attr("x", 0).attr("width", startPoint.x);
-                    } else {
-                        rect.attr("x", startPoint.x).attr("width", width - startPoint.x);
-                    }
-                    rect.attr("y", rectY).attr("height", rectHeight);
-                });
-        
-              }
-          });
-          
-
-
-      }
+        } 
       
       }
     });
@@ -574,7 +624,7 @@ if(showTextTool){
 
 
 
-export const generateLineChart = (svg, g, data, width, height,svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage ) => {
+export const generateLineChart = (svg, g, data, width, height,svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
   // Create scales
   g.selectAll('*').remove();
   d3.select(priceAxiesRef.current).selectAll("*").remove();
@@ -582,12 +632,20 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
   const x = d3.scaleUtc()
     .domain(d3.extent(data, d => d.Date))
     .range([0, width + 200])
+
+
+
+
  
 
   const y = d3.scaleLinear()
     .domain([d3.min(data, d => d.Close), d3.max(data, d => d.Close)])
     .range([height, 0]);
 
+
+
+    console.log("loggin in canvas height", height)
+    console.log("Loggin in canvs width", width)
 
   // Create line generator
   const line = d3.line()
@@ -621,7 +679,7 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
 
   // Add y-axis grid lines
   const yAxisGrid = d3.axisLeft(y)
-    .tickSize(-width - 500)
+    .tickSize(-width - 200)
     .tickFormat('')
     .ticks(10);
 
@@ -667,6 +725,8 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
     .attr("class", "tooltip")
     .style("display", "none");
 
+
+
   // Add dots
   // g.selectAll(".dot")
   //   .data(data)
@@ -687,6 +747,9 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
   //   .on('mouseout', () => {
   //     tooltip.style('display', 'none');
   //   });
+
+
+
 
   // Add crosshair
   const crosshair = g.append('g').style('display', 'none');
@@ -717,7 +780,8 @@ const overlay = g.append("rect")
 
 
   // console.log(x.invert(150), "This is hte xcale with date")
-  manageLineDrawing(svg, g, overlay, enableLineDrawing, x, y);
+
+  manageLineDrawing(svg, g, overlay, enableLineDrawing, showFib, showTextTool, drawingType, x , y );
 
 // calculates simple moving average over 50 days
 const movingAverageData = movingAverage(data, 50);
@@ -748,14 +812,15 @@ g
   .append('path')
   .data([movingAverageData])
   .style('fill', 'none')
+  .style("display", "none")
   .attr('id', 'movingAverageLine')
   .attr('stroke', '#FF8900')
   .attr('d', movingAverageLine)
 
 
 // generates moving average curve when called
-if (showMovingAverage) {
-  g.select("#movingAverageLine").style("display", null); // or "block"
+if (showExponentialMovingAverage) {
+  g.select("#movingAverageLine").style("display", null); 
 
   
 } else {
@@ -764,6 +829,7 @@ if (showMovingAverage) {
 
 if(showExponentialMovingAverage)
 { 
+
   g.select("#expmovingAverageLine").style("display", null); // or "block"
 
 } else { 
@@ -774,45 +840,73 @@ if(showExponentialMovingAverage)
 
 
 
+// Function to update the trend lines
+function updateTrendLines(newX) {
+  trendLines.forEach(lineData => {
+    const newXStart = newX(lineData.startX);
+    const newYStart = y(lineData.startY);
+    const newXEnd = newX(lineData.endX);
+    const newYEnd = y(lineData.endY);
+
+    console.log(`Start: (${newXStart}, ${newYStart}), End: (${newXEnd}, ${newYEnd})`);
+
+
+    // Check if the line exists, if not create it
+    let drawLine = g.select(`.draw-line-${lineData.id}`);
+    if (drawLine.empty()) {
+      drawLine = g.append("line")
+        .attr("class", `draw-line draw-line-${lineData.id}`)
+        .attr("stroke", "red") // or any desired color
+        .attr("stroke-width", 1.5);
+    }
+
+    drawLine.attr("x1", newXStart)
+      .attr("y1", newYStart)
+      .attr("x2", newXEnd)
+      .attr("y2", newYEnd);
+  });
+
+
+}
+
+updateTrendLines(x);
+
   const zoom = d3.zoom()
   .scaleExtent([1, 20])
   .on("zoom", (event) => {
-    const transform = event.transform;
-    const newX = transform.rescaleX(x);
+      const transform = event.transform;
+      const newX = transform.rescaleX(x);
 
-    // Update the main line and dots
-    g.select(".x-axis").call(xAxis.scale(newX));
-    g.selectAll(".dot")
-      .attr("cx", d => newX(d.Date));
-    linePath.attr("d", line.x(d => newX(d.Date)));
+      // Update the main line and dots
+      g.select(".x-axis").call(xAxis.scale(newX));
+      g.selectAll(".dot")
+          .attr("cx", d => newX(d.Date));
+      linePath.attr("d", line.x(d => newX(d.Date)));
 
-    movingAverageData.forEach(d => {
-    });
-    
-    exponentialMovingAverageData.forEach(d => {
-    });
-    
+      movingAverageData.forEach(d => {
+      });
 
-      if (lineData) {
-      const newXStart = x(lineData.startX);
-      const newYStart = y(lineData.startY);
-      const newXEnd = x(lineData.endX);
-      const newYEnd = y(lineData.endY);
+      exponentialMovingAverageData.forEach(d => {
+      });
 
-      g.select(".draw-line")  // or whatever class you've given your permanent line
-        .attr("x1", newXStart)
-        .attr("y1", newYStart)
-        .attr("x2", newXEnd)
-        .attr("y2", newYEnd);
-    }
 
-    
-    movingAverageLine.x(d => newX(d.date));
-    g.select("#movingAverageLine").attr("d", movingAverageLine(movingAverageData));
-    
-    exponentialLine.x(d => newX(d.date));
-    g.select("#expmovingAverageLine").attr("d", exponentialLine(exponentialMovingAverageData));
-    
+      updateTrendLines(newX);
+
+
+
+
+
+      movingAverageLine.x(d => newX(d.date));
+      g.select("#movingAverageLine").attr("d", movingAverageLine(movingAverageData));
+
+      exponentialLine.x(d => newX(d.date));
+      g.select("#expmovingAverageLine").attr("d", exponentialLine(exponentialMovingAverageData));
+
+
+
+      
+
+
 
   });
 
@@ -897,7 +991,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
   const x = d3.scaleUtc()
     .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
-    .range([0, width]);
+    .range([0, width + 200]);
 
   const y = d3.scaleLinear()
     .domain([
@@ -914,7 +1008,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
   // If you also want to move the y-grid lines, you can do so like this:
   const yAxisGrid = d3.axisRight(y)  // Use axisRight instead of axisLeft
-    .tickSize(width)  // Positive width to extend grid lines across the chart
+    .tickSize(width + 200)  // Positive width to extend grid lines across the chart
     .tickFormat('')
     .ticks(10)
 
@@ -1031,7 +1125,7 @@ export const generateCandleStickChart = (svg, g, data, width, height) => {
 
 
 // This generates the specific Chart Based on selection
-export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage) => {
+export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage, showFib, showTextTool, drawingType) => {
   // Clear previous chart elements
   svg.selectAll('*').remove();
 
@@ -1040,7 +1134,7 @@ export const generateChart = (chartType, svg, g, data, width, height, svgContain
 
   switch (chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage);
+      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
     case 'candlestick':
       return generateCandleStickChart(svg, newG, data, width, height);
     default:

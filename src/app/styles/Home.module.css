@@ -49,7 +49,7 @@
 }
 
 .line_active_icon{
-  background: rgba(173, 190, 231, 0.597);
+  background: #435843;
   border-radius: 5px;
 
 }
@@ -57,7 +57,7 @@
   width: 40px;
 }
 .icon_button:hover{
-  background: rgba(173, 190, 231, 0.597);
+  background: #435843;
   border-radius: 5px;
 }
 .icon_button img {
@@ -88,7 +88,7 @@
   background: #252525a3;
   border-right: 1px solid rgb(95 95 95 / 78%);
   box-shadow: 0 0 8px 1px rgba(0,0,0,.1);
-  display: flex;
+  display: none;
   flex-direction: column;
   color: white;
   font-size: 16px;
@@ -97,7 +97,7 @@
 }
 
 .popup.show {
-  display: block;
+  display: flex;
 }
 .btn_selectors { 
   display: flex;

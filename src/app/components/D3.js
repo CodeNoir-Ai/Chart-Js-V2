@@ -30,20 +30,33 @@ const D3JS = () => {
   const [showMovingAverage, setShowMovingAverage] = useState(false);
   const [showExponentialMovingAverage, setShowExponentialMovingAverage] = useState(false);
   const [showTextTool, setShowTextTool] = useState(false);
+  const [showFib, setShowFib] = useState(false)
 
-  const toggleLineDrawing = () => {  // 2. Add toggle function
-    setEnableLineDrawing(!enableLineDrawing);
+  //Keep Track of  Line Drawing states
+  const [lineType, setLineType] = useState("ray");
 
-        setIsActive(prev => !prev);
-  };
-  const toggleTextTool = () => { 
-    setShowTextTool(!showTextTool)
-    console.log(showTextTool, "This is the status of show")
-  }
+
+  const toggleLineDrawing = () => {
+    setEnableLineDrawing(true);
+    setShowTextTool(false);
+    setShowFib(false);
+    setIsActive(prev => !prev);
+};
+
+const toggleTextTool = () => {
+    setShowTextTool(true);
+    setEnableLineDrawing(false);
+    setShowFib(false);
+};
+ 
+const toggleFibTool = () => {
+    setShowFib(true);
+    setShowTextTool(false);
+    setEnableLineDrawing(false);
+};
+
   function toggleMovingAverage() {
     setShowMovingAverage(!showMovingAverage);
-
-  console.log(enableLineDrawingBtnRef.current, "This is a ref")
 
 
 
@@ -132,13 +145,17 @@ const handleMouseMove = (e) => {
   },[data])
 
 
+  const margin = { top: 55, right: 80, bottom: 40, left: 53 };
+  //Setting the width for the charts to be passed
+  const [chartWidth, setChartWidth] = useState(null)
+  const [chartHeight, setChartHeight] = useState(null)
+
   useEffect(() => {
 
     d3.select(chartRef.current).selectAll("*").remove();
     d3.select(chartRef.current).style("cursor", "crosshair");
 
     //TODO can we calculate this instead of hard code?
-    const margin = { top: 55, right: 80, bottom: 40, left: 53 };
   
 
 
@@ -157,24 +174,10 @@ const handleMouseMove = (e) => {
     const initialWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
     const initialHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
 
+    setChartWidth(initialWidth)
+    setChartHeight(initialHeight)
 
 
-
-    const xscale = d3.scaleUtc()
-    .domain(d3.extent(data, d => d.Date))
-    .range([0, initialWidth])
-
-    setXScaleSet(xScaleSet)
-   
- 
-
-  const yscale = d3.scaleLinear()
-    .domain([d3.min(data, d => d.Close), d3.max(data, d => d.Close)])
-    .range([initialHeight, 0]);
-  
-    
-    setYScaleSet(yScaleSet)
-    
   
 
      
@@ -230,13 +233,13 @@ const handleMouseMove = (e) => {
       const newG = svg.append("g").attr("transform", "translate(0, 0)");
 
       // Call the generateLineChart function with new dimensions
-      generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage);
+      generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
     };
 
 
 
     // Initial chart drawing
-    generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage);
+    generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
 
     // Attach resize event listener
     window.addEventListener('resize', handleResize);
@@ -263,13 +266,28 @@ useEffect(() => {
   const overlay = svg.select(".overlay");
 
 
+  const x = d3.scaleUtc()
+  .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
+  .range([0, chartWidth + 200]);
 
+  const y = d3.scaleLinear()
+    .domain([
+      d3.min(data, d => Math.min(d.Low, d.Close)),
+      d3.max(data, d => Math.max(d.High, d.Close))
+    ])
+    .range([chartHeight, 0]);
+
+
+    console.log("Logging the chart widt", chartWidth)
+    console.log("Loggin in useEFfect height",chartHeight)
+
+    
   if (overlay.empty()) {
     console.warn("No overlay found");
     return;
   }
   
-  // Check if zoomRect exists
+  // Check if zoomRect exists 
   if (zoomRect.empty()) {
     console.warn("No zoomRect found");
     return;
@@ -286,15 +304,20 @@ useEffect(() => {
 
   // Re-attach event listeners if line drawing is enabled
   if (enableLineDrawing) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, "trend");
+    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, null, null, lineType,x,y);
   }
   if (showTextTool) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showTextTool, "text");
+    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showTextTool, "text", null, x, y);
+  }
+
+  if (showFib) {
+    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showFib, null, null, x, y);
   }
 
 
 
-}, [enableLineDrawing, showTextTool]);
+
+}, [enableLineDrawing, showTextTool, lineType]);
 
 useEffect(() => {
   // Select the existing SVG and group elements
@@ -345,7 +368,12 @@ useEffect(() => {
             toggleChartType={toggleChartType}
             toggleLineDrawing={toggleLineDrawing}
             toggleTextTool = {toggleTextTool}
+            toggleFibTool = {toggleFibTool}
             isActive = {isActive}
+            setLineType = {setLineType}
+            lineType = {lineType}
+
+
           />
 
 

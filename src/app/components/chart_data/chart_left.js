@@ -2,10 +2,13 @@ import { useState } from 'react'
 import styles from '../../styles/Home.module.css'
 
 
-export default function Chartleft({ toggleChartType, toggleLineDrawing, toggleTextTool, isActive }) {
+export default function Chartleft({ toggleChartType, toggleLineDrawing, toggleTextTool,toggleFibTool, isActive, setLineType, lineType }) {
 
 
     const [isHovered, setIsHovered] = useState(false);
+
+
+
 
     
         
@@ -21,12 +24,21 @@ export default function Chartleft({ toggleChartType, toggleLineDrawing, toggleTe
                         <div 
                         onMouseLeave={() => setIsHovered(false)}
                         className={`${styles.popup} ${isHovered ? styles.show : ''}`}>
-                            <div className = {styles.btn_selectors}>Trendline</div>
-                            <div className = {styles.btn_selectors}>Ray Line</div>
-                            <div className = {styles.btn_selectors}>Trendline</div>
-                            <div className = {styles.btn_selectors}>Ray Line</div>
-                            <div className = {styles.btn_selectors}>Trendline</div>
-                            <div className = {styles.btn_selectors}>Ray Line</div>
+                            <div onClick={() => setLineType("trend")} className = {styles.btn_selectors}>Trendline</div>
+                            <div onClick={() => setLineType("ray")} className = {styles.btn_selectors}>Ray Line</div>
+                            <div 
+                            onClick={() => setLineType("extended-line")} 
+                            className = {styles.btn_selectors}>Extended Line</div>
+                            <div 
+                            onClick={() => setLineType("horizontal-line-ray")}
+                            className = {styles.btn_selectors}>Horizontal Ray Line</div>
+                            <div 
+                            onClick={() => setLineType("vertical")}
+                            className = {styles.btn_selectors}>Vertical Line</div>
+                            <div 
+                            onClick={() => setLineType("cross-line")}
+                            className = {styles.btn_selectors}>Cross Line</div>
+                            {/* <div className = {styles.btn_selectors}>Fi</div> */}
                         </div>
 
 
@@ -45,14 +57,18 @@ export default function Chartleft({ toggleChartType, toggleLineDrawing, toggleTe
 >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><g fill="white" fill-rule="nonzero"><path d="M7.354 21.354l14-14-.707-.707-14 14z"></path><path d="M22.5 7c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm0 1c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5zM5.5 24c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm0 1c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5z"></path></g></svg>
                 </button>
-                <button className={styles.icon_button}>
+                <button 
+                onMouseDown={toggleTextTool }
+                className={styles.icon_button}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><g fill="white" fill-rule="nonzero"><path d="M3 5h22v-1h-22z"></path><path d="M3 17h22v-1h-22z"></path><path d="M3 11h19.5v-1h-19.5z"></path><path d="M5.5 23h19.5v-1h-19.5z"></path><path d="M3.5 24c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm0 1c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5zM24.5 12c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm0 1c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5z"></path></g></svg>
                 </button>
                 <button className={styles.icon_button}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><g fill="white" fill-rule="nonzero"><path d="M1.789 23l.859-.854.221-.228c.18-.19.38-.409.597-.655.619-.704 1.238-1.478 1.815-2.298.982-1.396 1.738-2.776 2.177-4.081 1.234-3.667 5.957-4.716 8.923-1.263 3.251 3.785-.037 9.38-5.379 9.38h-9.211zm9.211-1c4.544 0 7.272-4.642 4.621-7.728-2.45-2.853-6.225-2.015-7.216.931-.474 1.408-1.273 2.869-2.307 4.337-.599.852-1.241 1.653-1.882 2.383l-.068.078h6.853z"></path><path d="M18.182 6.002l-1.419 1.286c-1.031.935-1.075 2.501-.096 3.48l1.877 1.877c.976.976 2.553.954 3.513-.045l5.65-5.874-.721-.693-5.65 5.874c-.574.596-1.507.609-2.086.031l-1.877-1.877c-.574-.574-.548-1.48.061-2.032l1.419-1.286-.672-.741z"></path></g></svg>
                 </button>
 
-                <button onClick={toggleTextTool} className={styles.icon_button}>
+                <button            
+                 onClick={toggleFibTool}      
+                className={styles.icon_button}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><path fill="white" d="m9.5 5C8.68 5 8 5.67 8 6.5v2h1v-2c0-.27.23-.5.5-.5H14v16h-2v1h5v-1h-2V6h4.5c.28 0 .5.22.5.5v2h1v-2c0-.83-.67-1.5-1.5-1.5h-10z"></path></svg>
                 </button>
 

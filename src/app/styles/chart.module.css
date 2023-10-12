@@ -424,6 +424,7 @@
     max-height: 418px;
     height: 418px;
     overflow: hidden;
+    border: 1px solid rgba(121, 121, 121, 0.466);
 
 }
 .chat_box{
@@ -447,7 +448,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: #53505030;
+    /* background: #53505030; */
 }
 
 .response_Flex{
@@ -460,7 +461,7 @@
     padding: 8px 16px;
 }
 .bot_Message{
-    background-color: #56e35b69;
+    background-color: #43584338;
     color: #000;
     align-self: flex-start;
 }
