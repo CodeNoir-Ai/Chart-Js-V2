@@ -338,7 +338,27 @@ if(showFib){
       } else {
 
         if (drawingType === 'trend') {
+
+          // New code to account for zoom posiiotn and drawing 
+
+          const currentTransform = d3.zoomTransform(g.node())
+          // Inverse transform the start and end points of the line
+          const unzoomedStart = currentTransform.invert([lineStartPoint.x, lineStartPoint.y]);
+          const unzoomedEnd = currentTransform.invert([mouseX, mouseY]);
+
           tempLine.remove();
+
+
+          // g.append("line")
+          // .attr("class", "draw-line")
+          // .attr("x1", unzoomedStart[0])
+          // .attr("y1", unzoomedStart[1])
+          // .attr("x2", unzoomedEnd[0])
+          // .attr("y2", unzoomedEnd[1])
+          // .attr("stroke", "red")
+          // .attr("stroke-width", 1);
+
+
           g.append("line")
             .attr("class", "draw-line")
             .attr("x1", lineStartPoint.x)
@@ -356,17 +376,21 @@ if(showFib){
 
           const dataXStart = x.invert(lineStartPoint.x);
           const dataYStart = y.invert(lineStartPoint.y);
-          const dataXEnd = x.invert(transformedX);
-          const dataYEnd = y.invert(transformedY);
+          const dataXEnd = x.invert(mouseX);
+          const dataYEnd = y.invert(mouseY);
 
-            lineData = 
-            { 
-              id: lineID++, //Asign and Increment
-              startX: dataXStart,
-              startY: dataYStart,
-              endX: dataXEnd,
-              endY: dataYEnd
-            };
+          lineData = { 
+            id: lineID++, 
+            startX: dataXStart, // data coordinates
+            startY: dataYStart,
+            endX: dataXEnd,
+            endY: dataYEnd,
+            pixelStartX: lineStartPoint.x, // screen coordinates
+            pixelStartY: lineStartPoint.y,
+            pixelEndX: mouseX,
+            pixelEndY: mouseY
+          };
+          
 
             trendLines.push(lineData)
 
@@ -624,7 +648,7 @@ if(showFib){
 
 
 
-export const generateLineChart = (svg, g, data, width, height,svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
+export const generateLineChart = (svg, g, data, width, height,svgContainerHeight,svgContainerRect,  enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
   // Create scales
   g.selectAll('*').remove();
   d3.select(priceAxiesRef.current).selectAll("*").remove();
@@ -690,11 +714,10 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
   // Add the y-axis to the right
   const yAxisGroup = g.append("g")
     .attr("class", "y-axis")
-    .attr("transform", `translate(${width}, 0)`)
+    .attr("transform", `translate(${width + 95}, 0)`)
     .attr('stroke', 'rgba(255, 255, 255, 0.1)')  // White with 20% opacity
-    .attr('stroke-width', 1);
-  //Draws the y axies 
-  //  .call(d3.axisRight(y)); 
+    .attr('stroke-width', 1)
+   .call(d3.axisRight(y)); 
 
   yAxisGroup.select(".domain").remove();
 
@@ -724,6 +747,8 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
   const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("display", "none");
+
+
 
 
 
@@ -766,6 +791,7 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
   d3.select(svg.node().parent).on("mouseleave", () => {
     crosshair.style("display", "none");
   });
+  
 
 // Append a transparent overlay rectangle on top of everything
 const overlay = g.append("rect")
@@ -776,12 +802,14 @@ const overlay = g.append("rect")
   .attr("pointer-events", "all");  // This ensures the rectangle captures all mouse events
 
 
-  // move out of line drawing
 
 
-  // console.log(x.invert(150), "This is hte xcale with date")
+
 
   manageLineDrawing(svg, g, overlay, enableLineDrawing, showFib, showTextTool, drawingType, x , y );
+
+
+
 
 // calculates simple moving average over 50 days
 const movingAverageData = movingAverage(data, 50);
@@ -871,17 +899,106 @@ function updateTrendLines(newX) {
 
 updateTrendLines(x);
 
+
+
+// Check if tooltip exists
+if (d3.select("#priceToolTipX").empty()) {
+  // If not, create it
+  d3.select("body").append("div")
+      .attr("id", "priceToolTipX")
+      .attr("class", "tooltip")
+      .style("display", "none");
+}
+
+// Do the same for priceToolTipY
+if (d3.select("#priceToolTipY").empty()) {
+  d3.select("body").append("div")
+      .attr("id", "priceToolTipY")
+      .attr("class", "tooltip")
+      .style("display", "none");
+}
+
+  //Creataing the hovering tooltip
+  const priceToolTipY = d3.select("body").append("div")
+  .attr("class", "priceToolTipY")
+  .style("display", "none")
+  .style("position", "absolute")
+  .style("background-color", "rgba(123, 123, 123, 0.555)")
+  .style("border", "1px solid #ccc")
+  .style("padding", "5px")
+  .style("border-radius", "5px")
+  .style("pointer-events", "none"); 
+
+  const priceToolTipX = d3.select("body").append("div")
+  .attr("class", "priceToolTipX")
+  .style("display", "none")
+  .style("position", "absolute")
+  .style("background-color", "rgba(123, 123, 123, 0.555)")
+  .style("border", "1px solid #ccc")
+  .style("padding", "5px")
+  .style("border-radius", "5px")
+  .style("pointer-events", "none"); 
+
+
+
+
+
+
+
+
+
+//For updating the price to be correlated to the zoom state
+let currentX = x;
+let currentY = y;
+
   const zoom = d3.zoom()
   .scaleExtent([1, 20])
   .on("zoom", (event) => {
       const transform = event.transform;
+  
+      //Calcuate the max and min TranslateY(for the chart) which is calcuating the boundries
+      let maxTranslateY = (height - height * transform.k) / transform.k
+      let minTranslateY = 0
+
+      //Restrict the transform translateY  component 
+      transform.y = Math.min(Math.max(transform.y, minTranslateY), maxTranslateY);
       const newX = transform.rescaleX(x);
+
+      //Get the current domain of the x-axis after zooming/panning
+      const xDomain = newX.domain()
+      //Filter the data to get only the visible points.
+      const visibleData = data.filter(d => d.Date >= xDomain[0] && d.Date <= xDomain[1]);
+
+      // Recalculate y-domain based on visible data
+      const yDomain = [
+        d3.min(visibleData, d => d.Close),
+        d3.max(visibleData, d => d.Close)
+      ];
+
+      const newY = transform.rescaleY(y);
+
+      newY.domain(yDomain);
+
+  // Update the current scales
+      currentX = newX;
+      currentY = newY;
+
+
+
+
 
       // Update the main line and dots
       g.select(".x-axis").call(xAxis.scale(newX));
       g.selectAll(".dot")
           .attr("cx", d => newX(d.Date));
       linePath.attr("d", line.x(d => newX(d.Date)));
+
+      //Update the y-axis grid lines 
+      g.select('.y-grid').call(yAxisGrid.scale(newY));
+
+      //Update the y-axis labels 
+      yAxisGroup.call(d3.axisRight(newY));
+
 
       movingAverageData.forEach(d => {
       });
@@ -892,6 +1009,47 @@ updateTrendLines(x);
 
       updateTrendLines(newX);
 
+
+
+
+
+//Handling  current date mousemovments hover.
+overlay.on("mousemove", function(event) {
+
+  const [mx,my] = d3.pointer(event) //Get mouse cords 
+
+  //To account for the zoom state
+  const hoverDate = currentX.invert(mx);
+  const hoverPrice = currentY.invert(my);
+
+  priceToolTipY
+    .style("display", 'block')
+    .html(`${hoverPrice.toFixed(2)}`)
+    .style('left', svgContainerRect.right - 40 + 'px')  // This pins the tooltip to the far left edge of the SVG container
+    .style('top', (event.pageY - 28) + 'px');
+
+
+       //Formatting the date for the output.
+       const formatDate = d3.timeFormat("%d, %B '%y");
+       const formattedDate = formatDate(hoverDate);
+       console.log("Formatted Hovered Date:", formattedDate);
+   
+       priceToolTipX
+        .style("display", "block")
+        .html(`${formattedDate}`)
+        .style('left', (event.pageX + 15) + 'px')  // Adjust position as needed
+        .style('top', svgContainerRect.bottom - 28 + 'px')  // This pins the tooltip to the far left edge of the SVG container
+
+
+
+
+
+ 
+
+}).on("mouseout", function() {
+  priceToolTipY.style('display', 'none');
+  priceToolTipX.style('display', 'none');
+});
 
 
 
@@ -916,30 +1074,380 @@ g.call(zoom);
 
 
 
-  // Create SVG element for price axis
-  const priceAxisSvg = d3.select(priceAxiesRef.current)
-    .append("svg")
-    .attr("width", 50)  // Width of the price axis container
-    .attr("height", height)  // Set the height to be the same as the main SVG
-    .attr("class", "price-axis-container");
+
+  function setupTooltip(svg,width,height)
+  { 
+    const tooltipLineX = g.append("line")
+    .attr("class", "tooltip-line")
+    .style('pointer-events','none')
+    .attr("id", "tooltip-line-x")
+    .attr("stroke", "grey")
+    
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "2,2");
+  
+  const tooltipLineY = g.append("line")
+    .attr("class", "tooltip-line")
+    .style('pointer-events','none')
+    .attr("id", "tooltip-line-y")
+    .attr("stroke", "grey")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "2,2");
+  
+  
+    
+  
+  // Attach the mousemove event to the overlay
+  svg.on("mousemove", function (event) {
+    const [xCoord, yCoord] = d3.pointer(event, this);
+    // Update the position of the red lines to extend from the mouse position
+    tooltipLineX.attr("x1", xCoord).attr("x2", xCoord).attr("y1", 0).attr("y2", height);
+    tooltipLineY.attr("y1", yCoord).attr("y2", yCoord).attr("x1", 0).attr("x2", width + 200);
 
 
-
-  // Generate price labels similar to how you did for the main y-axis
-  const yAxisTicks = y.ticks(10);  // Same number of ticks as y-grid
-  yAxisTicks.forEach(tick => {
-    priceAxisSvg.append('text')
-      .attr('x', 10)
-      .attr('y', y(tick) + 40)  // Use the same y scale
-      .attr('dy', '.35em')
-      .attr('text-anchor', 'start')
-      .attr('stroke-width', 1)
-      .selectAll("line")
-      .style("stroke", "rgba(255, 255, 255, 0.2)") // White
-      .text(tick);
-  });
 
     
+  
+  });
+  
+  };
+  setupTooltip(g, width, height);
+
+  }
+  
+
+
+
+export const generateCandleStickChart =(svg, g, data, width, height,svgContainerHeight,svgContainerRect,  enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
+
+  /* can we reduce to just charting data layer?
+   * leave the drawing layer alone
+  */
+  g.selectAll('*').remove();
+
+  const x = d3.scaleUtc()
+    .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
+    .range([0, width + 200]);
+
+  const y = d3.scaleLinear()
+    .domain([
+      d3.min(data, d => Math.min(d.Low, d.Close)),
+      d3.max(data, d => Math.max(d.High, d.Close))
+    ])
+    .range([height, 0]);
+
+
+  // Axes
+  const xAxis = d3.axisBottom(x);
+  const yAxis = d3.axisRight(y);
+
+    
+  xAxis.tickSize(-height)
+  
+
+
+  // // If you also want to move the y-grid lines, you can do so like this:
+  // const yAxisGrid = d3.axisRight(y)  // Use axisRight instead of axisLeft
+  //   .tickSize(width + 200)  // Positive width to extend grid lines across the chart
+  //   .tickFormat('')
+  //   .ticks(15)
+
+  //     // Add y-axis grid lines
+  const yAxisGrid = d3.axisLeft(y)
+  .tickSize(-width - 200)
+  .tickFormat('')
+  .ticks(10);
+
+g.append("g")
+  .attr("class", "y-grid")
+  .call(yAxisGrid);
+
+// Add the y-axis to the right
+const yAxisGroup = g.append("g")
+  .attr("class", "y-axis")
+  .attr("transform", `translate(${width + 95}, 0)`)
+  .attr('stroke', 'rgba(255, 255, 255, 0.1)')  // White with 20% opacity
+  .attr('stroke-width', 1)
+ .call(d3.axisRight(y)); 
+
+yAxisGroup.select(".domain").remove();
+
+
+
+  // g.append("g")
+  // .attr("class", "y-grid")
+  // .call(yAxisGrid)
+  // .selectAll("line")
+
+
+
+  // Add x-axis grid lines
+
+  const initialWidth = 6;
+  const xAxisGrid = d3.axisBottom(x)
+    .tickSize(-height)
+    .tickFormat('')
+    .ticks(6);
+
+
+  const zoomRect = g.append("rect")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("fill", "none")
+    .attr("pointer-events", "all");
+
+
+
+  g.append("g")
+    .attr("class", "x-axis")
+    .attr("transform", `translate(0, ${height})`)
+    .call(xAxis);
+
+  // Bars
+  const bars = g.selectAll(".bar")
+    .data(data)
+    .enter().append("rect")
+    .attr("class", "bar")
+    .attr("x", d => x(new Date(d.Date)) - initialWidth / 2)
+    .attr("y", d => y(Math.max(d.Open, d.Close)))
+    .attr("height", d => Math.abs(y(d.Open) - y(d.Close)))
+    .attr("width", initialWidth)
+    .attr("fill", d => d.Open > d.Close ? "red" : "green")
+    
+
+
+  // Lines for High and Low
+  const lines = g.selectAll(".line")
+    .data(data)
+    .enter().append("line")
+    .attr("class", "line")
+    .attr("x1", d => x(new Date(d.Date)))
+    .attr("y1", d => y(d.High))
+    .attr("x2", d => x(new Date(d.Date)))
+    .attr("y2", d => y(d.Low))
+    .attr("stroke", d => d.Open > d.Close ? "red" : "green");
+
+
+  // const drawlines = g.selectAll(".draw-line")
+
+  //   .data(data)
+  //   .enter().append("line")
+  //   .attr("class", "draw-line")
+  //   .attr("x1", 100)
+  //   .attr("y1", 100)
+  //   .attr("x2", 300)
+  //   .attr("y2", 200)
+  //   .attr("stroke", "black")
+  //   .attr("stroke-width", 1.5);
+
+
+
+
+
+// Check if tooltip exists
+if (d3.select("#priceToolTipX").empty()) {
+  // If not, create it
+  d3.select("body").append("div")
+      .attr("id", "priceToolTipX")
+      .attr("class", "tooltip")
+      .style("display", "none");
+}
+
+// Do the same for priceToolTipY
+if (d3.select("#priceToolTipY").empty()) {
+  d3.select("body").append("div")
+      .attr("id", "priceToolTipY")
+      .attr("class", "tooltip")
+      .style("display", "none");
+}
+
+  //Creataing the hovering tooltip
+  const priceToolTipY = d3.select("body").append("div")
+  .attr("class", "priceToolTipY")
+  .style("display", "none")
+  .style("position", "absolute")
+  .style("background-color", "rgba(123, 123, 123, 0.555)")
+  .style("border", "1px solid #ccc")
+  .style("padding", "5px")
+  .style("border-radius", "5px")
+  .style("pointer-events", "none"); 
+
+  const priceToolTipX = d3.select("body").append("div")
+  .attr("class", "priceToolTipX")
+  .style("display", "none")
+  .style("position", "absolute")
+  .style("background-color", "rgba(123, 123, 123, 0.555)")
+  .style("border", "1px solid #ccc")
+  .style("padding", "5px")
+  .style("border-radius", "5px")
+  .style("pointer-events", "none"); 
+
+
+  //Open high close and low nature.
+  // Add this at the beginning of your code, where you set up your SVG and other elements
+const ohlcTooltip = d3.select("body").append("div")
+.attr("class", "ohlcTooltip")
+.style("display", "none")
+.style("position", "absolute")
+.style("background-color", "rgba(123, 123, 123, 0.555)")
+.style("border", "1px solid #ccc")
+.style("padding", "5px")
+.style("border-radius", "5px")
+.style("pointer-events", "none");
+
+
+
+
+// Append a transparent overlay rectangle on top of everything
+const overlay = g.append("rect")
+  .attr("width", width + 200)
+  .attr("height", height)
+  .attr("fill", "none")
+  .attr("class", "overlay")  // <-- Add this line
+  .attr("pointer-events", "all");  // This ensures the rectangle captures all mouse events
+
+
+  
+
+
+
+  let currentX = x;
+  let currentY = y;
+
+  const throttledZoom = _.throttle((event) => {
+    const transform = event.transform;
+
+    const newX = transform.rescaleX(x);
+    const newWidth = initialWidth * Math.sqrt(transform.k);
+    g.select(".x-axis").call(xAxis.scale(newX));
+    bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
+      .attr("width", newWidth);
+    lines.attr("x1", d => newX(new Date(d.Date)))
+      .attr("x2", d => newX(new Date(d.Date)));
+  
+      //Calcuate the max and min TranslateY(for the chart) which is calcuating the boundries
+      let maxTranslateY = (height - height * transform.k) / transform.k
+      let minTranslateY = 0
+
+      //Restrict the transform translateY  component 
+      transform.y = Math.min(Math.max(transform.y, minTranslateY), maxTranslateY);
+
+      //Get the current domain of the x-axis after zooming/panning
+      const xDomain = newX.domain()
+      //Filter the data to get only the visible points.
+      const visibleData = data.filter(d => d.Date >= xDomain[0] && d.Date <= xDomain[1]);
+
+      // Recalculate y-domain based on visible data
+      const yDomain = [
+        d3.min(visibleData, d => d.Close),
+        d3.max(visibleData, d => d.Close)
+      ];
+
+      const newY = transform.rescaleY(y);
+
+      newY.domain(yDomain);
+
+
+      //Update the y-axis grid lines 
+      g.select('.y-grid').call(yAxisGrid.scale(newY));
+
+      //Update the y-axis labels 
+      yAxisGroup.call(d3.axisRight(newY));
+
+
+
+
+        // Update the current scales
+        currentX = newX;
+        currentY = newY;
+
+    //Handling  current date mousemovments hover.
+overlay.on("mousemove", function(event) {
+
+  const [mx,my] = d3.pointer(event) //Get mouse cords 
+
+  //To account for the zoom state
+  const hoverDate = currentX.invert(mx);
+  const hoverPrice = currentY.invert(my);
+
+  priceToolTipY
+    .style("display", 'block')
+    .html(`${hoverPrice.toFixed(2)}`)
+    .style('left', svgContainerRect.right - 40 + 'px')  // This pins the tooltip to the far left edge of the SVG container
+    .style('top', (event.pageY - 28) + 'px');
+
+
+       //Formatting the date for the output.
+       const formatDate = d3.timeFormat("%d, %B '%y");
+       const formattedDate = formatDate(hoverDate);
+       console.log("Formatted Hovered Date:", formattedDate);
+   
+       priceToolTipX
+        .style("display", "block")
+        .html(`${formattedDate}`)
+        .style('left', (event.pageX + 15) + 'px')  // Adjust position as needed
+        .style('top', svgContainerRect.bottom - 28 + 'px')  // This pins the tooltip to the far left edge of the SVG container
+
+    // Use bisector to find the closest data point
+    const index = d3.bisect(data, hoverDate, 1);
+    let adjustedIndex = index;
+    if (index > 0 && index < data.length) {
+        const dateBefore = new Date(data[index - 1].Date);
+        const dateAfter = new Date(data[index].Date);
+
+        const distanceBefore = Math.abs(dateBefore - hoverDate);
+        const distanceAfter = Math.abs(dateAfter - hoverDate);
+
+        adjustedIndex = distanceBefore < distanceAfter ? index - 1 : index;
+    } else if (index >= data.length) {
+        adjustedIndex = index - 1;
+    }
+
+    const hoveredData = data[adjustedIndex];
+
+    console.log("Current we are loggin the Hoverd Data", hoveredData)
+
+
+    // Extract OHLC values
+    if (hoveredData) {
+        const openValue = hoveredData.Open.toFixed(2);
+        const highValue = hoveredData.High.toFixed(2);
+        const lowValue = hoveredData.Low.toFixed(2);
+        const closeValue = hoveredData.Close.toFixed(2);
+
+        // Update the tooltip
+        ohlcTooltip
+            .style("display", "block")
+            .html(`O: ${openValue} H: ${highValue} L: ${lowValue} C: ${closeValue}`)
+            .style('left', d3.pointer(event)[0] + svgContainerRect.left + 10 + 'px')
+            .style('top', d3.pointer(event)[1] + svgContainerRect.top + 10 + 'px');
+    }
+
+ 
+
+}).on("mouseout", function() {
+  priceToolTipY.style('display', 'none');
+  priceToolTipX.style('display', 'none');
+  ohlcTooltip.style('display', 'none');
+
+});
+
+
+
+
+
+
+
+
+  })
+
+  const zoom = d3.zoom()
+    .scaleExtent([1, 20])
+    .on("zoom", throttledZoom);
+
+  g.call(zoom);
+
+
 
 
   function setupTooltip(svg,width,height)
@@ -971,161 +1479,25 @@ g.call(zoom);
     tooltipLineX.attr("x1", xCoord).attr("x2", xCoord).attr("y1", 0).attr("y2", height);
     tooltipLineY.attr("y1", yCoord).attr("y2", yCoord).attr("x1", 0).attr("x2", width + 200);
   
+  
+  
   });
   
   };
   setupTooltip(g, width, height);
-
-
-  }
+  
   
 
 
 
-export const generateCandleStickChart = (svg, g, data, width, height) => {
 
-  /* can we reduce to just charting data layer?
-   * leave the drawing layer alone
-  */
-  g.selectAll('*').remove();
-
-  const x = d3.scaleUtc()
-    .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
-    .range([0, width + 200]);
-
-  const y = d3.scaleLinear()
-    .domain([
-      d3.min(data, d => Math.min(d.Low, d.Close)),
-      d3.max(data, d => Math.max(d.High, d.Close))
-    ])
-    .range([height, 0]);
-
-
-  // Axes
-  const xAxis = d3.axisBottom(x);
-  const yAxis = d3.axisRight(y);
-
-
-  // If you also want to move the y-grid lines, you can do so like this:
-  const yAxisGrid = d3.axisRight(y)  // Use axisRight instead of axisLeft
-    .tickSize(width + 200)  // Positive width to extend grid lines across the chart
-    .tickFormat('')
-    .ticks(10)
-
-
-  g.append("g")
-  .attr("class", "y-grid")
-  .call(yAxisGrid)
-  .selectAll("line")
-
-
-
-  // Add x-axis grid lines
-
-  const initialWidth = 6;
-  const xAxisGrid = d3.axisBottom(x)
-    .tickSize(-height)
-    .tickFormat('')
-    .ticks(6);
-
-
-  const zoomRect = g.append("rect")
-    .attr("width", width)
-    .attr("height", height)
-    .attr("fill", "none")
-    .attr("pointer-events", "all");
-
-  g.append("g")
-    .attr("class", "x-grid")
-    .attr("transform", `translate(0, ${height})`)
-    .call(xAxisGrid);
-
-  g.append("g")
-    .attr("class", "x-axis")
-    .attr("transform", `translate(0, ${height})`)
-    .call(xAxis);
-
-  // g.append("g")
-  //   .attr("class", "y-axis")
-  //   .attr("transform", `translate(${width}, 0)`)  // Translate it to the right
-  //   .call(yAxis);
-
-  // Bars
-  const bars = g.selectAll(".bar")
-    .data(data)
-    .enter().append("rect")
-    .attr("class", "bar")
-    .attr("x", d => x(new Date(d.Date)) - initialWidth / 2)
-    .attr("y", d => y(Math.max(d.Open, d.Close)))
-    .attr("height", d => Math.abs(y(d.Open) - y(d.Close)))
-    .attr("width", initialWidth)
-    .attr("fill", d => d.Open > d.Close ? "red" : "green");
-
-  // Lines for High and Low
-  const lines = g.selectAll(".line")
-    .data(data)
-    .enter().append("line")
-    .attr("class", "line")
-    .attr("x1", d => x(new Date(d.Date)))
-    .attr("y1", d => y(d.High))
-    .attr("x2", d => x(new Date(d.Date)))
-    .attr("y2", d => y(d.Low))
-    .attr("stroke", d => d.Open > d.Close ? "red" : "green");
-
-
-  const drawlines = g.selectAll(".draw-line")
-
-    .data(data)
-    .enter().append("line")
-    .attr("class", "draw-line")
-    .attr("x1", 100)
-    .attr("y1", 100)
-    .attr("x2", 300)
-    .attr("y2", 200)
-    .attr("stroke", "black")
-    .attr("stroke-width", 1.5);
-
-
-
-
-  const throttledZoom = _.throttle((event) => {
-    const transform = event.transform;
-    //const minTranslateX = (1 - transform.k) * x(new Date(data[0].Date));
-    // if (transform.x > minTranslateX) {
-    //     transform.x = minTranslateX;
-    // }
-    const newX = transform.rescaleX(x);
-    const newWidth = initialWidth * Math.sqrt(transform.k);
-    g.select(".x-axis").call(xAxis.scale(newX));
-    bars.attr("x", d => newX(new Date(d.Date)) - newWidth / 2)
-      .attr("width", newWidth);
-    lines.attr("x1", d => newX(new Date(d.Date)))
-      .attr("x2", d => newX(new Date(d.Date)));
-
-
-    drawlines.attr("x2", d => newX(new Date(d.Date)))
-      .attr("stroke", "red")
-      .attr("stroke-width", 3.5);
-
-
-
-
-
-  })
-
-  const zoom = d3.zoom()
-    .scaleExtent([1, 20])
-    .on("zoom", throttledZoom);
-
-  zoomRect.call(zoom);
 }
 
 
 
 
-
 // This generates the specific Chart Based on selection
-export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage, showFib, showTextTool, drawingType) => {
+export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage, showFib, showTextTool, drawingType) => {
   // Clear previous chart elements
   svg.selectAll('*').remove();
 
@@ -1134,9 +1506,9 @@ export const generateChart = (chartType, svg, g, data, width, height, svgContain
 
   switch (chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
+      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
     case 'candlestick':
-      return generateCandleStickChart(svg, newG, data, width, height);
+      return generateCandleStickChart(svg, newG, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
     default:
       return null;
   }

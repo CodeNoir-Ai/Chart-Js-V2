@@ -192,6 +192,7 @@ const handleMouseMove = (e) => {
 
       //Getting the height data to manipulate the inner G element height.
       const svgContainerHeight = svgContainer.node().getBoundingClientRect().height;
+      const svgContainerRect = svgContainer.node().getBoundingClientRect()
 
 
 
@@ -233,13 +234,13 @@ const handleMouseMove = (e) => {
       const newG = svg.append("g").attr("transform", "translate(0, 0)");
 
       // Call the generateLineChart function with new dimensions
-      generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
+      generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
     };
 
 
 
     // Initial chart drawing
-    generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
+    generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
 
     // Attach resize event listener
     window.addEventListener('resize', handleResize);
@@ -386,7 +387,9 @@ useEffect(() => {
 
 
          
-          <div ref={chartRef}></div>
+          <div ref={chartRef}>
+
+          </div>
           {/* <FinancialChartComponent data = {data} /> */}
 
           <div ref = {toolContainerRef} 
