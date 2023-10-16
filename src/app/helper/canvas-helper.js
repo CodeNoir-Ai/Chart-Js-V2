@@ -1388,41 +1388,45 @@ overlay.on("mousemove", function(event) {
         .style('left', (event.pageX + 15) + 'px')  // Adjust position as needed
         .style('top', svgContainerRect.bottom - 28 + 'px')  // This pins the tooltip to the far left edge of the SVG container
 
-    // Use bisector to find the closest data point
-    const index = d3.bisect(data, hoverDate, 1);
-    let adjustedIndex = index;
-    if (index > 0 && index < data.length) {
-        const dateBefore = new Date(data[index - 1].Date);
-        const dateAfter = new Date(data[index].Date);
-
-        const distanceBefore = Math.abs(dateBefore - hoverDate);
-        const distanceAfter = Math.abs(dateAfter - hoverDate);
-
-        adjustedIndex = distanceBefore < distanceAfter ? index - 1 : index;
-    } else if (index >= data.length) {
-        adjustedIndex = index - 1;
-    }
-
-    const hoveredData = data[adjustedIndex];
-
-    console.log("Current we are loggin the Hoverd Data", hoveredData)
 
 
-    // Extract OHLC values
-    if (hoveredData) {
-        const openValue = hoveredData.Open.toFixed(2);
-        const highValue = hoveredData.High.toFixed(2);
-        const lowValue = hoveredData.Low.toFixed(2);
-        const closeValue = hoveredData.Close.toFixed(2);
+        //Encaspluating below this function handles the OPEN, HIGH, ClOSE, and LOW 
+    
+   // Step 2: Identify the Corresponding Bar for the Hovered Date
+   data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
-        // Update the tooltip
-        ohlcTooltip
-            .style("display", "block")
-            .html(`O: ${openValue} H: ${highValue} L: ${lowValue} C: ${closeValue}`)
-            .style('left', d3.pointer(event)[0] + svgContainerRect.left + 10 + 'px')
-            .style('top', d3.pointer(event)[1] + svgContainerRect.top + 10 + 'px');
-    }
-
+   console.log("logign the data", data)
+   const bisectDate = d3.bisector(d => new Date(d.Date)).left;
+   const index = bisectDate(data, hoverDate, 1);
+   let adjustedIndex = index;
+   if (index > 0 && index < data.length) {
+       const dateBefore = new Date(data[index - 1].Date);
+       const dateAfter = new Date(data[index].Date);
+       const distanceBefore = Math.abs(dateBefore - hoverDate);
+       const distanceAfter = Math.abs(dateAfter - hoverDate);
+       adjustedIndex = distanceBefore < distanceAfter ? index - 1 : index;
+   } else if (index >= data.length) {
+       adjustedIndex = index - 1;
+   }
+   
+   const hoveredData = data[adjustedIndex];
+   
+   // Step 3: Extract the OHLC Data from the Identified Bar
+   if (hoveredData) {
+       const openValue = hoveredData.Open.toFixed(2);
+       const highValue = hoveredData.High.toFixed(2);
+       const lowValue = hoveredData.Low.toFixed(2);
+       const closeValue = hoveredData.Close.toFixed(2);
+       
+       // Step 4: Display the OHLC Data in the Tooltip
+       ohlcTooltip
+           .style("display", "block")
+           .html(`O: ${openValue} H: ${highValue} L: ${lowValue} C: ${closeValue}`)
+           .style('left', d3.pointer(event)[0] + svgContainerRect.left + 10 + 'px')
+           .style('top', d3.pointer(event)[1] + svgContainerRect.top + 10 + 'px');
+   } else {
+       ohlcTooltip.style("display", "none");
+   }
  
 
 }).on("mouseout", function() {
