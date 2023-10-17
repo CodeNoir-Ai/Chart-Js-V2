@@ -43,12 +43,15 @@ text{
   display: flex;
   border-radius: 10px;
   box-shadow: 0 2px 4px #0003;
-  display: block;
   flex-direction: column;
   overflow-y: auto;
   display: none;
   flex-direction: column;
 }
+
+
+
+
 .scroll-wrapper{
   position: relative;
   height: 100%;
@@ -489,3 +492,73 @@ rect {
 .tooltip-line {
   stroke-opacity: 0.5;
 }
+
+
+
+/* LINK TOOL SETTINGS CSS  */
+
+.link-wrapper-section{
+  
+  display: flex;
+  flex-direction: column;
+  border-bottom: 0.5px solid #2b2b2b00;
+
+}
+.lineSettings-tool-container{
+  position: fixed;
+  width: 425px;
+  max-width: 550px;
+  height: 478px;
+  background: rgba(0, 0, 0, 0.474);
+  border: 1px solid rgba(255, 255, 255, 0.2); 
+  top: 20%;
+  left: 20%;
+  display: flex;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px #0003;
+  flex-direction: column;
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+}
+
+
+.line-settings-container{
+  position: fixed;
+  width: 225px;
+  max-width: 550px;
+  height: 478px;
+  background: rgba(0, 0, 0, 0.474);
+  border: 1px solid rgba(255, 255, 255, 0.2); 
+  top: 20%;
+  left: 20%;
+  display: flex;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px #0003;
+  flex-direction: column;
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+}
+
+
+.link-btn
+{ 
+  width: 100%;
+  background: transparent;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  padding: 1rem 0.5rem;
+
+}
+.link-btn:hover{
+  background:red
+}
+
+
+
+
+
+
+/* LINK TOOL SETTINGS CSS  */

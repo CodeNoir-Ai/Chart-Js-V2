@@ -306,12 +306,7 @@ if(showFib){
       if (!enableLineDrawing) return;
 
       const [mx, my] = d3.pointer(event);
-      const currentTransform = d3.zoomTransform(g.node());
-      const [rawX, rawY] = d3.pointer(event);
-      const transformedX = (rawX - currentTransform.x) / currentTransform.k;
-      const transformedY = (rawY - currentTransform.y) / currentTransform.k;
 
-  
       const mouseX = mx;
       const mouseY = my;
 
@@ -320,7 +315,7 @@ if(showFib){
 
 
       if (!lineStartPoint) {
-        lineStartPoint = { x: transformedX, y: transformedY};
+        lineStartPoint = { x: mx, y: my};
 
 
         tempLine = g.append("line")
@@ -329,8 +324,8 @@ if(showFib){
           .attr("y1", lineStartPoint.y)
           .attr("x2", mx)
           .attr("y2", my)
-          .attr("stroke", "white")
-          .attr("stroke-width", 1.5)
+          .attr("stroke", "red")
+          .attr("stroke-width", 2)
 
 
 
@@ -342,21 +337,8 @@ if(showFib){
           // New code to account for zoom posiiotn and drawing 
 
           const currentTransform = d3.zoomTransform(g.node())
-          // Inverse transform the start and end points of the line
-          const unzoomedStart = currentTransform.invert([lineStartPoint.x, lineStartPoint.y]);
-          const unzoomedEnd = currentTransform.invert([mouseX, mouseY]);
+      
 
-          tempLine.remove();
-
-
-          // g.append("line")
-          // .attr("class", "draw-line")
-          // .attr("x1", unzoomedStart[0])
-          // .attr("y1", unzoomedStart[1])
-          // .attr("x2", unzoomedEnd[0])
-          // .attr("y2", unzoomedEnd[1])
-          // .attr("stroke", "red")
-          // .attr("stroke-width", 1);
 
 
           g.append("line")
@@ -366,18 +348,19 @@ if(showFib){
             .attr("x2", mouseX)
             .attr("y2", mouseY)
             .attr("stroke", "red")
-            .attr("stroke-width", 1);
+            .attr("stroke-width", 2);
 
           tempLine.remove();
 
 
 
 
+          
+          const dataXStart = currentTransform.rescaleX(x).invert(lineStartPoint.x)
+          const dataYStart = g.node().__currentY.invert(lineStartPoint.y);         
+          const dataXEnd = currentTransform.rescaleX(x).invert(mouseX);         
+          const dataYEnd = g.node().__currentY.invert(mouseY);
 
-          const dataXStart = x.invert(lineStartPoint.x);
-          const dataYStart = y.invert(lineStartPoint.y);
-          const dataXEnd = x.invert(mouseX);
-          const dataYEnd = y.invert(mouseY);
 
           lineData = { 
             id: lineID++, 
@@ -385,17 +368,13 @@ if(showFib){
             startY: dataYStart,
             endX: dataXEnd,
             endY: dataYEnd,
-            pixelStartX: lineStartPoint.x, // screen coordinates
-            pixelStartY: lineStartPoint.y,
-            pixelEndX: mouseX,
-            pixelEndY: mouseY
+    
           };
           
 
             trendLines.push(lineData)
 
 
-            console.log(lineData, "this is showing current position of the line data")
 
           lineStartPoint = null;
 
@@ -668,8 +647,7 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
 
 
 
-    console.log("loggin in canvas height", height)
-    console.log("Loggin in canvs width", width)
+  
 
   // Create line generator
   const line = d3.line()
@@ -867,37 +845,79 @@ if(showExponentialMovingAverage)
 
 
 
+//Function to update the trend lines 
+function updateTrendLines(newX, newY) {
 
-// Function to update the trend lines
-function updateTrendLines(newX) {
-  trendLines.forEach(lineData => {
-    const newXStart = newX(lineData.startX);
-    const newYStart = y(lineData.startY);
-    const newXEnd = newX(lineData.endX);
-    const newYEnd = y(lineData.endY);
+  g.selectAll(".draw-line")
+    .data(trendLines)
+    .join('line')
+    .classed('.draw-line', true)
+    .attr("stroke", "red") // or any desired color
+    .attr("stroke-width", 2)
+    .each(function (lineData) {
+      const newXStart = newX(lineData.startX);
+      const newYStart = newY(lineData.startY);
+      const newXEnd = newX(lineData.endX);
+      const newYEnd = newY(lineData.endY);
+      // console.log(`Start: (${newXStart}, ${newYStart}), End: (${newXEnd}, ${newYEnd})`);
+      d3.select(this).attr("x1", newXStart)
+        .attr("y1", newYStart)
+        .attr("x2", newXEnd)
+        .attr("y2", newYEnd);
+    })
+    .on('contextmenu', function(event, d) { // Right-click event
+      event.preventDefault(); // Prevent the default context menu from showing up
+      
+      // Get the position where the user clicked
+      const [x, y] = d3.pointer(event);
+      
+      // Show the line-settings-container and position it slightly to the right of the click location
+      d3.select('.line-settings-container')
+          .style('left', (x + 10) + 'px')  // Slightly to the right
+          .style('top', y + 'px')
+          .style('display', 'flex');
+      
+      // Optional: Close the settings container when clicking anywhere else on the document
+      d3.select(document).on('click.hideMenu', function() {
+          d3.select('.line-settings-container').style('display', 'none');
+          d3.select(document).on('click.hideMenu', null); // Remove this event listener after firing once
+      });
+  })   
 
-    console.log(`Start: (${newXStart}, ${newYStart}), End: (${newXEnd}, ${newYEnd})`);
+    .on('mouseover', function(event, d) { // Mouseover event
+      d3.select(this).attr("stroke", "orange").attr("stroke-width", 2).style("cursor", "pointer"); 
+      
 
+    })
+    .on('mouseout', function(event, d) { // Mouseout event
+      d3.select(this).attr("stroke", "red").attr("stroke-width", 2);
+    })
+   
 
-    // Check if the line exists, if not create it
-    let drawLine = g.select(`.draw-line-${lineData.id}`);
-    if (drawLine.empty()) {
-      drawLine = g.append("line")
-        .attr("class", `draw-line draw-line-${lineData.id}`)
-        .attr("stroke", "red") // or any desired color
-        .attr("stroke-width", 1.5);
-    }
+  }
 
-    drawLine.attr("x1", newXStart)
-      .attr("y1", newYStart)
-      .attr("x2", newXEnd)
-      .attr("y2", newYEnd);
-  });
+  //Dealing Soley With Line Settings 
+  function handleToolContainerClick() {
+    d3.select('.lineSettings-Tool-Container')
+      window.alert("This has been clicekd ")
 
+        .style('display', 'flex'); // Show the tool container
 
+    d3.select('.line-settings-container')
+        .style('display', 'none'); // Hide the original settings container
 }
+d3.select('.link-settings-container')
+    .on('click', handleToolContainerClick);
 
-updateTrendLines(x);
+
+
+
+
+
+
+updateTrendLines(x, y);
+
+
 
 
 
@@ -961,7 +981,7 @@ let currentY = y;
       let minTranslateY = 0
 
       //Restrict the transform translateY  component 
-      transform.y = Math.min(Math.max(transform.y, minTranslateY), maxTranslateY);
+      // transform.y = Math.min(Math.max(transform.y, minTranslateY), maxTranslateY);
       const newX = transform.rescaleX(x);
 
       //Get the current domain of the x-axis after zooming/panning
@@ -983,21 +1003,21 @@ let currentY = y;
       currentX = newX;
       currentY = newY;
 
-
-
+      //For getting the current line drawing positoin aswell, getting the curreny Y by ac
+      g.node().__currentY = newY;
 
 
       // Update the main line and dots
       g.select(".x-axis").call(xAxis.scale(newX));
       g.selectAll(".dot")
           .attr("cx", d => newX(d.Date));
-      linePath.attr("d", line.x(d => newX(d.Date)));
+      linePath.attr("d", line.y(d => newY(d.Close)).x(d => newX(d.Date)));
 
       //Update the y-axis grid lines 
       g.select('.y-grid').call(yAxisGrid.scale(newY));
 
       //Update the y-axis labels 
-      yAxisGroup.call(d3.axisRight(newY));
+      yAxisGroup.transition().call(d3.axisRight(newY));
 
 
       movingAverageData.forEach(d => {
@@ -1007,7 +1027,7 @@ let currentY = y;
       });
 
 
-      updateTrendLines(newX);
+      updateTrendLines(newX, newY);
 
 
 
@@ -1032,7 +1052,6 @@ overlay.on("mousemove", function(event) {
        //Formatting the date for the output.
        const formatDate = d3.timeFormat("%d, %B '%y");
        const formattedDate = formatDate(hoverDate);
-       console.log("Formatted Hovered Date:", formattedDate);
    
        priceToolTipX
         .style("display", "block")
@@ -1380,7 +1399,6 @@ overlay.on("mousemove", function(event) {
        //Formatting the date for the output.
        const formatDate = d3.timeFormat("%d, %B '%y");
        const formattedDate = formatDate(hoverDate);
-       console.log("Formatted Hovered Date:", formattedDate);
    
        priceToolTipX
         .style("display", "block")
@@ -1395,7 +1413,6 @@ overlay.on("mousemove", function(event) {
    // Step 2: Identify the Corresponding Bar for the Hovered Date
    data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
-   console.log("logign the data", data)
    const bisectDate = d3.bisector(d => new Date(d.Date)).left;
    const index = bisectDate(data, hoverDate, 1);
    let adjustedIndex = index;

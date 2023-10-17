@@ -4,6 +4,7 @@ import axios from 'axios';  // Make sure to install axios
 import { generateChart, manageLineDrawing } from "../helper/canvas-helper"
 import Chartleft from './chart_data/chart_left';
 import TextTool from '../chartTools/TextTool.js'
+import LineToolPopUp from '../chartTools/LineToolPopup' 
 import ChatBox from '../components/chart_data/chatbox.js'
 
 import  FinancialChartComponent from '../components/ChartComponent/Chart.js'
@@ -390,7 +391,6 @@ useEffect(() => {
           <div ref={chartRef}>
 
           </div>
-          {/* <FinancialChartComponent data = {data} /> */}
 
           <div ref = {toolContainerRef} 
         onMouseMove={handleMouseMove}
@@ -501,7 +501,18 @@ useEffect(() => {
         </div>
 
 
-          {/* <div className="price-axies-container" ref={priceAxiesRef}></div> */}
+
+
+      {/* Dealing with LineDrawing tool text pop up  */}
+
+
+      <LineToolPopUp />
+
+
+      {/* Dealing with LineDrawing tool text pop up  */}
+
+
+
         </div>
 
 
