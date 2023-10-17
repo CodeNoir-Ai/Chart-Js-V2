@@ -1422,8 +1422,8 @@ overlay.on("mousemove", function(event) {
        ohlcTooltip
            .style("display", "block")
            .html(`O: ${openValue} H: ${highValue} L: ${lowValue} C: ${closeValue}`)
-           .style('left', d3.pointer(event)[0] + svgContainerRect.left + 10 + 'px')
-           .style('top', d3.pointer(event)[1] + svgContainerRect.top + 10 + 'px');
+           .style('left',svgContainerRect.left + 10 + 'px')
+           .style('top',svgContainerRect.top + 70 + 'px');
    } else {
        ohlcTooltip.style("display", "none");
    }
