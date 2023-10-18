@@ -897,11 +897,13 @@ function updateTrendLines(newX, newY) {
   }
 
   //Dealing Soley With Line Settings 
-  function handleToolContainerClick() {
-    d3.select('.lineSettings-Tool-Container')
-      window.alert("This has been clicekd ")
+  function handleToolContainerClick(event) {
+    const [x, y] = d3.pointer(event);
 
-        .style('display', 'flex'); // Show the tool container
+    window.alert("this is being clicked")
+
+    d3.select('.lineSettings-tool-container')
+    .style('display', 'flex');
 
     d3.select('.line-settings-container')
         .style('display', 'none'); // Hide the original settings container
@@ -976,10 +978,7 @@ let currentY = y;
   .on("zoom", (event) => {
       const transform = event.transform;
   
-      //Calcuate the max and min TranslateY(for the chart) which is calcuating the boundries
-      let maxTranslateY = (height - height * transform.k) / transform.k
-      let minTranslateY = 0
-
+ 
       //Restrict the transform translateY  component 
       // transform.y = Math.min(Math.max(transform.y, minTranslateY), maxTranslateY);
       const newX = transform.rescaleX(x);
@@ -1165,11 +1164,6 @@ export const generateCandleStickChart =(svg, g, data, width, height,svgContainer
   
 
 
-  // // If you also want to move the y-grid lines, you can do so like this:
-  // const yAxisGrid = d3.axisRight(y)  // Use axisRight instead of axisLeft
-  //   .tickSize(width + 200)  // Positive width to extend grid lines across the chart
-  //   .tickFormat('')
-  //   .ticks(15)
 
   //     // Add y-axis grid lines
   const yAxisGrid = d3.axisLeft(y)

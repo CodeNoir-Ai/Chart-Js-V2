@@ -5,6 +5,8 @@ import { generateChart, manageLineDrawing } from "../helper/canvas-helper"
 import Chartleft from './chart_data/chart_left';
 import TextTool from '../chartTools/TextTool.js'
 import LineToolPopUp from '../chartTools/LineToolPopup' 
+import LineToolSettings from '../chartTools/LineToolSettings' 
+
 import ChatBox from '../components/chart_data/chatbox.js'
 
 import  FinancialChartComponent from '../components/ChartComponent/Chart.js'
@@ -507,6 +509,7 @@ useEffect(() => {
 
 
       <LineToolPopUp />
+      <LineToolSettings />
 
 
       {/* Dealing with LineDrawing tool text pop up  */}
