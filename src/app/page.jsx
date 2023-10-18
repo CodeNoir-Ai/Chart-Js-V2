@@ -14,17 +14,12 @@ export default function Home() {
         />
         <meta property="og:title" content="My new title" key="title" />
       </Head>
-      {/* <ChartComponent /> */}
-
-      {/* <TradingChart /> */}
-
+   
     <Nav />
 
       <div>
-        {/* <Chartleft /> */}
         <D3JS />
-        {/* <ChartContents />
-                <Chartright /> */}
+       
       </div>
     </div>
   );

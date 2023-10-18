@@ -17,6 +17,20 @@ export class FinancialChart {
         
         Object.assign(this.attrs, initialConfig);
 
+        //Handles the Switching Between Chart Types 
+
+        
+        // this.chartTypes = 
+        // { 
+        //     "line": generateLineChart,
+        //     "candlestick" : generateCandleStickChart,
+
+        //     // We will add more as needed 
+        // }
+
+
+
+
         this.isLineDrawingEnable = false;
         this.lineStartPoint = null;
         this.tempLine = null;

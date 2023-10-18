@@ -12,6 +12,8 @@ import ChatBox from '../components/chart_data/chatbox.js'
 import  FinancialChartComponent from '../components/ChartComponent/Chart.js'
 
 const D3JS = () => {
+
+
   const chartRef = useRef(null);
   const priceAxiesRef = useRef(null)
   const toolTipRef = useRef(null);
@@ -73,8 +75,6 @@ const toggleFibTool = () => {
 
 
   //Text Tool Draggin
-
-
     //For the textTool
     const toolContainerRef = useRef(null);
     const toolHeaderRef = useRef(null)
@@ -119,6 +119,8 @@ const handleMouseMove = (e) => {
   //Text Tool Draggin
   
 
+
+// For featchihng the data
   useEffect(() => { 
     axios.get('http://localhost:3001/stockdata')
     .then(response => {
@@ -215,7 +217,7 @@ const handleMouseMove = (e) => {
 
     const g = svg.append("g").attr("transform", "translate(0, 0)");
 
-    // Function to handle window resize
+    // Function to handle window resize for chart
     const handleResize = () => {
       // Get new dimensions
       const newWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
@@ -239,8 +241,6 @@ const handleMouseMove = (e) => {
       generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
     };
 
-
-
     // Initial chart drawing
     generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
 
@@ -257,8 +257,10 @@ const handleMouseMove = (e) => {
 
   }, [chartType, priceAxiesRef]);
 
-  // Add this useEffect to your existing component
-// Second useEffect for line drawing
+
+
+
+// Second useEffect for line drawings
 useEffect(() => {
   const margin = { top: 30, right: 80, bottom: 40, left: 53 };
 
@@ -322,6 +324,9 @@ useEffect(() => {
 
 }, [enableLineDrawing, showTextTool, lineType]);
 
+
+
+//UseEffect to handle showcasing the moving averages
 useEffect(() => {
   // Select the existing SVG and group elements
   const svg = d3.select(chartRef.current).select('svg').select('g');
