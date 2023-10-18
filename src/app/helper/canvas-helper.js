@@ -859,7 +859,6 @@ function updateTrendLines(newX, newY) {
       const newYStart = newY(lineData.startY);
       const newXEnd = newX(lineData.endX);
       const newYEnd = newY(lineData.endY);
-      // console.log(`Start: (${newXStart}, ${newYStart}), End: (${newXEnd}, ${newYEnd})`);
       d3.select(this).attr("x1", newXStart)
         .attr("y1", newYStart)
         .attr("x2", newXEnd)
@@ -897,21 +896,21 @@ function updateTrendLines(newX, newY) {
   }
 
   //Dealing Soley With Line Settings 
-  function handleToolContainerClick(event) {
-    const [x, y] = d3.pointer(event);
+  function handleToolContainerClick(event ) {
+    console.log("This item is being clicked.... ")
 
-    window.alert("this is being clicked")
 
-    d3.select('.lineSettings-tool-container')
-    .style('display', 'flex');
-
-    d3.select('.line-settings-container')
-        .style('display', 'none'); // Hide the original settings container
 }
+
+
+
 d3.select('.link-settings-container')
     .on('click', handleToolContainerClick);
 
 
+
+// d3.select('.lineSettings-tool-container')
+// .style('display', 'flex');
 
 
 

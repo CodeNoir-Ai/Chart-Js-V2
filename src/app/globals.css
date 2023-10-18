@@ -4,6 +4,12 @@
   display: none !important;
 }
 
+/* Global Variables */
+.no-padding-left{
+  padding-left: 0 !important;
+}
+/* Global Variables */
+
 rect {
   fill-opacity: 1 !important;
 }
@@ -35,7 +41,7 @@ text{
   position: fixed;
   width: 405px;
   max-width: 550px;
-  height: 478px;
+  height: 505px;
   background: rgba(0, 0, 0, 0.474);
   border: 1px solid rgba(255, 255, 255, 0.2); 
   top: 20%;
@@ -71,6 +77,7 @@ text{
   gap: 15px;
   padding: 0rem 2rem;
   display: flex;
+  align-items: center;
 }
 .font-change-div{
   width: 125px;
@@ -221,6 +228,7 @@ text{
 .title-FG0u1J5p{
   cursor: default;
     min-width: 0;
+    font-size: 14px;
 }
 
 /* Custom CheckMark Conatiner */
@@ -234,6 +242,7 @@ text{
   padding: 1rem;
   z-index: 999;
   display: flex;
+  margin-top: 1.5rem; 
 }
 .text-button-container{
   display: flex;
@@ -508,7 +517,7 @@ rect {
   position: fixed;
   width: 425px;
   max-width: 550px;
-  height: 478px;
+  height: auto;
   background: rgba(0, 0, 0, 0.474);
   border: 1px solid rgba(255, 255, 255, 0.2); 
   top: 20%;
@@ -527,7 +536,7 @@ rect {
   position: fixed;
   width: 225px;
   max-width: 550px;
-  height: 478px;
+  height: 100%;
   background: rgba(0, 0, 0, 0.474);
   border: 1px solid rgba(255, 255, 255, 0.2); 
   top: 20%;
@@ -555,6 +564,25 @@ rect {
 .link-btn:hover{
   background:red
 }
+
+
+/* Line Settigns Tool Select Header  */
+.lineSettings-toolSelect{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  gap: 10px;
+  margin-bottom: 15px;
+  font-weight: bolder;
+
+
+}
+
+.lineSetting-small{
+  cursor: pointer;
+
+}
+/* Line Settigns Tool Select Header  */
 
 
 

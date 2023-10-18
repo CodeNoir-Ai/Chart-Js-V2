@@ -158,7 +158,6 @@ const handleMouseMove = (e) => {
     d3.select(chartRef.current).selectAll("*").remove();
     d3.select(chartRef.current).style("cursor", "crosshair");
 
-    //TODO can we calculate this instead of hard code?
   
 
 
