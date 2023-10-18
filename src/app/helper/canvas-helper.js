@@ -1,3 +1,8 @@
+// THIS HANDLES THE RENDERING OF LINE DRAWING TOOLS AND THE CHART
+//*** TO NOTE THAT ONLY THE LINEDRAWING CHART CONTAINS THE DRAWING TOOLS  */
+
+
+
 // generateLineChart.js
 import exp from 'constants';
 import * as d3 from 'd3';

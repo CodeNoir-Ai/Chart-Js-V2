@@ -367,6 +367,9 @@ useEffect(() => {
 
       <div className="chart-wrapper">
       <div className="chart-modal">
+
+
+        {/* THIS IS HANDLING THE CHART BAR TOOL SELECTOR  */}
              <Chartleft
             toggleChartType={toggleChartType}
             toggleLineDrawing={toggleLineDrawing}
@@ -379,6 +382,10 @@ useEffect(() => {
 
           />
 
+
+
+
+{/* THIS IS CREATING THE THE SURRONDING CONTAINER THAT HOLD THE CHART  */}
 
           <div className = "chart-container">
 
@@ -504,7 +511,8 @@ useEffect(() => {
 
 
 
-      {/* Dealing with LineDrawing tool text pop up  */}
+
+      {/* Dealing with LineDrawing tool text pop up  // WE are looking to modify these into class based components  */}
 
 
       <LineToolPopUp />
@@ -514,18 +522,17 @@ useEffect(() => {
       {/* Dealing with LineDrawing tool text pop up  */}
 
 
-
         </div>
 
 
 
           <ChatBox />
 
+
         </div>
 
       </div>
       
-
 
 
 
