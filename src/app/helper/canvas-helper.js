@@ -6,9 +6,16 @@
 // generateLineChart.js
 import exp from 'constants';
 import * as d3 from 'd3';
-import _, { maxBy } from 'lodash';
+import _, { maxBy, over } from 'lodash';
 import next from 'next';
 import { Line } from 'react-chartjs-2';
+import {handleTextTool} from './LineDrawing/DrawingTools/TextTool.js' 
+import {FibTool} from './LineDrawing/DrawingTools/FibTool.js' 
+
+// Main Line Drawing Tools 
+import {handleRayLine} from './LineDrawing/DrawingTools/RayLine.js' 
+import {handleTrendLine} from './LineDrawing/DrawingTools/Trendline.js' 
+
 
 
 /**
@@ -78,7 +85,13 @@ let lineData = null;
 let lineID = 0
 let trendLines = []
 
+
 // Handling Temp Trend Lines IDS(How can we implement to scale these?)
+
+
+
+
+
 
 export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTool, showFib, drawingType, x , y) => {
 
@@ -86,501 +99,360 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTo
 
   let lineStartPoint = null;
   let tempLine = null;
+
   const width = svg.node().getBoundingClientRect().width;
   const height = svg.node().getBoundingClientRect().height;
 
 
-  let xScale = null
-  let yScale = null
+  let xScale = x || null;
+  let yScale = y || null;
 
-  //Get the current zoom position to account for the translatting zoom
-
-
-
-  if(x){
-  
-
-    xScale = x;
-    yScale = y;
-  }
+  if (showTextTool) handleTextTool(svg, overlay);
+  if (showFib) FibTool(svg, overlay, g, yScale);
 
 
 
 
-
-
-
-
-
-
-if(showFib){
-
-  if(showFib === false){
-    return
-  }
-
-
-
-    let startPoint = null;
-    let endPoint = null;
-    let tempLines = []
-    let tempRects = []
-    const fibColors = ["orange", "pink", "blue", "green", "purple"]; 
-
-    const fibLevels = [0, 0.236, 0.382, 0.5, 0.618, 1];
-
-    overlay.on("click", (event) => {
-        const [mx, my] = d3.pointer(event);
-
-        if (!startPoint) {
-            // Capture the starting point
-            startPoint = { x: mx, y: my };
-
-            //Create etemp lines for each Fib level
-            fibLevels.forEach((level, index) =>  { 
-              const tempLine = g.append("line")
-                .attr("x1", mx)
-                .attr("y1", my)
-                .attr("x2", width)
-                .attr("y2", my)
-                .attr("stroke", "blue")
-                .attr("stroke-width", 1.5)
-              tempLines.push(tempLine)
-
-              if(index < fibLevels.length - 1 ) { 
-                const tempRect = g.append("rect")
-                .attr("x", mx) 
-                .attr("y", my)
-                .attr("width", width)
-                .attr("height", 0)
-                .attr("fill", fibColors[index])
-                .attr("opacity", 0.5)
-              tempRects.push(tempRect)
-              }
-
-            })
-
-
-        } else {
-
-          //Remove the Temp lines 
-          tempLines.forEach(line => line.remove())
-          tempRects.forEach(rect => rect.remove())
-          tempLines = []
-          tempRects = []
-
-
-            // Capture the ending point
-            endPoint = { x: mx, y: my };
-
-
-            //Determine the direction of the drawing 
-            const direction = mx < startPoint.x ? "left" : "right";
-
-          
-            // Calculate the difference between start and end y-coordinates
-            const yDiff = endPoint.y - startPoint.y;
-            // Draw horizontal lines at Fibonacci levels
-            fibLevels.forEach((level, index) => {
-                const y = startPoint.y + yDiff * level;
-                let lineX1, lineX2, rectX, rectWidth;
-
-                if (direction === "left") {
-                  lineX1 = 0;
-                  lineX2 = startPoint.x;
-                  rectX = 0;
-                  rectWidth = startPoint.x;
-              } else {
-                  lineX1 = startPoint.x;
-                  lineX2 = width;
-                  rectX = startPoint.x;
-                  rectWidth = width - startPoint.x;
-              }
-
-
-                g.append("line")
-                    .attr("x1", lineX1)
-                    .attr("y1", y)
-                    .attr("x2", lineX2)
-                    .attr("y2", y)
-                    .attr("stroke", "blue")
-                    .attr("stroke-width", 1.5)
-
-               if (index < fibLevels.length - 1) {
-               const nextY = startPoint.y + yDiff * fibLevels[index + 1];
-                      g.append("rect")
-                          .attr("x", rectX)
-                          .attr("y", y)
-                          .attr("width", rectWidth)
-                          .attr("height", nextY - y)
-                          .attr("fill", fibColors[index])
-                          .attr("opacity", 0.5);
-                  }
-            });
-
-            // Reset the points for next drawing
-            startPoint = null;
-            // endPoint = null;
-        }
-    });
-      // Update the temporary lines on mouse move  
-      overlay.on("mousemove", (event) => {
-        if (startPoint && tempLines.length) {
-            const [mx, my] = d3.pointer(event);
-            const yDiff = my - startPoint.y;
-            const direction = mx < startPoint.x ? "left" : "right";
-    
-            tempLines.forEach((line, index) => {
-                const y = startPoint.y + yDiff * fibLevels[index];
-                if (direction === "left") {
-                    line.attr("x1", 0).attr("x2", startPoint.x);
-                } else {
-                    line.attr("x1", startPoint.x).attr("x2", width);
-                }
-                line.attr("y1", y).attr("y2", y);
-            });
-    
-            tempRects.forEach((rect, index) => {
-              const y = startPoint.y + yDiff * fibLevels[index];
-              const nextY = startPoint.y + yDiff * fibLevels[index + 1];
-              const rectHeight = Math.abs(nextY - y);
-              const rectY = yDiff >= 0 ? y : y - rectHeight;
-  
-              if (direction === "left") {
-                  rect.attr("x", 0).attr("width", startPoint.x);
-              } else {
-                  rect.attr("x", startPoint.x).attr("width", width - startPoint.x);
-              }
-              rect.attr("y", rectY).attr("height", rectHeight);
-          });
-  
-        }
-    });
-
-}
-
-
+  // Modularzing The Code 
 
   if (enableLineDrawing) {
-
     overlay.on("click", (event) => {
-      if (!enableLineDrawing) return;
+        const [mx, my] = d3.pointer(event);
+        switch(drawingType) {
+            case 'trend':
+              handleTrendLine(mx, my, g, x, lineStartPoint, tempLine, trendLines, overlay);
+                break;
+            case 'ray':
+                handleRayLine(mx, my,svg,  g, overlay, enableLineDrawing); 
+                break;
+            // ... other cases
+            default:
+                break;
+        }
+    });
 
-      const [mx, my] = d3.pointer(event);
 
-      const mouseX = mx;
-      const mouseY = my;
+  }
 
 
 
 
 
-      if (!lineStartPoint) {
-        lineStartPoint = { x: mx, y: my};
+  // if (enableLineDrawing) {
+
+  //   overlay.on("click", (event) => {
+  //     if (!enableLineDrawing) return;
+
+  //     const [mx, my] = d3.pointer(event);
 
 
-        tempLine = g.append("line")
-          .attr("class", "temp-line")
-          .attr("x1", lineStartPoint.x)
-          .attr("y1", lineStartPoint.y)
-          .attr("x2", mx)
-          .attr("y2", my)
-          .attr("stroke", "red")
-          .attr("stroke-width", 2)
+
+  //     if (!lineStartPoint) {
+  //       lineStartPoint = { x: mx, y: my};
+
+
+  //       tempLine = g.append("line")
+  //         .attr("class", "temp-line")
+  //         .attr("x1", lineStartPoint.x)
+  //         .attr("y1", lineStartPoint.y)
+  //         .attr("x2", mx)
+  //         .attr("y2", my)
+  //         .attr("stroke", "red")
+  //         .attr("stroke-width", 2)
 
 
 
         
-      } else {
+  //     } else {
 
-        if (drawingType === 'trend') {
+  //       if (drawingType === 'trend') {
 
-          // New code to account for zoom posiiotn and drawing 
+  //         // New code to account for zoom posiiotn and drawing 
 
-          const currentTransform = d3.zoomTransform(g.node())
+  //         const currentTransform = d3.zoomTransform(g.node())
       
 
 
 
-          g.append("line")
-            .attr("class", "draw-line")
-            .attr("x1", lineStartPoint.x)
-            .attr("y1", lineStartPoint.y)
-            .attr("x2", mouseX)
-            .attr("y2", mouseY)
-            .attr("stroke", "red")
-            .attr("stroke-width", 2);
+  //         g.append("line")
+  //           .attr("class", "draw-line")
+  //           .attr("x1", lineStartPoint.x)
+  //           .attr("y1", lineStartPoint.y)
+  //           .attr("x2", mx)
+  //           .attr("y2", my)
+  //           .attr("stroke", "red")
+  //           .attr("stroke-width", 2);
 
-          tempLine.remove();
+  //         tempLine.remove();
 
 
 
 
           
-          const dataXStart = currentTransform.rescaleX(x).invert(lineStartPoint.x)
-          const dataYStart = g.node().__currentY.invert(lineStartPoint.y);         
-          const dataXEnd = currentTransform.rescaleX(x).invert(mouseX);         
-          const dataYEnd = g.node().__currentY.invert(mouseY);
+  //         const dataXStart = currentTransform.rescaleX(x).invert(lineStartPoint.x)
+  //         const dataYStart = g.node().__currentY.invert(lineStartPoint.y);         
+  //         const dataXEnd = currentTransform.rescaleX(x).invert(mx);         
+  //         const dataYEnd = g.node().__currentY.invert(my);
 
 
-          lineData = { 
-            id: lineID++, 
-            startX: dataXStart, // data coordinates
-            startY: dataYStart,
-            endX: dataXEnd,
-            endY: dataYEnd,
+  //         lineData = { 
+  //           id: lineID++, 
+  //           startX: dataXStart, // data coordinates
+  //           startY: dataYStart,
+  //           endX: dataXEnd,
+  //           endY: dataYEnd,
     
-          };
+  //         };
           
 
-            trendLines.push(lineData)
+  //           trendLines.push(lineData)
 
 
 
-          lineStartPoint = null;
+  //         lineStartPoint = null;
 
-  // Update the temporary line on mouse move
-  overlay.on("mousemove", (event) => {
-    if (lineStartPoint && tempLine) {
-      const [mx, my] = d3.pointer(event);
-      tempLine.attr("x2", mx).attr("y2", my);
-    }
-  });
-        }else if (drawingType === 'ray') {
-          let startPoint = null;
-          let rayLine = null;
+  // // Update the temporary line on mouse move
+  // overlay.on("mousemove", (event) => {
+  //   if (lineStartPoint && tempLine) {
+  //     const [mx, my] = d3.pointer(event);
+  //     tempLine.attr("x2", mx).attr("y2", my);
+  //   }
+  // });
+  //       }else if (drawingType === 'ray') {
+  //         let startPoint = null;
+  //         let rayLine = null;
           
-          if (!startPoint) {
-            // Capture the starting point
-            startPoint = { x: mx, y: my };
-        } else {
-            // If a ray line already exists, remove it
-            if (rayLine) rayLine.remove();
+  //         if (!startPoint) {
+  //           // Capture the starting point
+  //           startPoint = { x: mx, y: my };
+  //       } else {
+  //           // If a ray line already exists, remove it
+  //           if (rayLine) rayLine.remove();
     
-            // Draw the permanent ray line
-            rayLine = g.append("line")
-                .attr("class", "ray-line")
-                .attr("x1", startPoint.x)
-                .attr("y1", startPoint.y)
-                .attr("x2", mx)
-                .attr("y2", my)
-                .attr("stroke", "blue")
-                .attr("stroke-width", 1.5);
+  //           // Draw the permanent ray line
+  //           rayLine = g.append("line")
+  //               .attr("class", "ray-line")
+  //               .attr("x1", startPoint.x)
+  //               .attr("y1", startPoint.y)
+  //               .attr("x2", mx)
+  //               .attr("y2", my)
+  //               .attr("stroke", "blue")
+  //               .attr("stroke-width", 1.5);
     
                 
 
-            // Reset the starting point
-            startPoint = null;
-            enableLineDrawing = false;
-        }
+  //           // Reset the starting point
+  //           startPoint = null;
+  //           enableLineDrawing = false;
+  //       }
 
 
-        overlay.on("mousemove", (event) => {
-          if (startPoint && enableLineDrawing) {
-            const [mx, my] = d3.pointer(event);
+  //       overlay.on("mousemove", (event) => {
+  //         if (startPoint && enableLineDrawing) {
+  //           const [mx, my] = d3.pointer(event);
 
-              const deltaX = mx - startPoint.x;
-              const deltaY = my - startPoint.y;
-              // Calculate the slope and extend the line to the edge
-              const slope = (my - startPoint.y) / (mx - startPoint.x);
-              let endX, endY;
+  //             const deltaX = mx - startPoint.x;
+  //             const deltaY = my - startPoint.y;
+  //             // Calculate the slope and extend the line to the edge
+  //             const slope = (my - startPoint.y) / (mx - startPoint.x);
+  //             let endX, endY;
               
-              //This checks if mouse has moved to the right of the staring point
-              if (deltaX >= 0) {
-                endX = width;
-                endY = startPoint.y + slope * (width - startPoint.x);
+  //             //This checks if mouse has moved to the right of the staring point
+  //             if (deltaX >= 0) {
+  //               endX = width;
+  //               endY = startPoint.y + slope * (width - startPoint.x);
               
-            } else {
-                endX = 0;
-                endY = startPoint.y - slope * startPoint.x;
-            }
+  //           } else {
+  //               endX = 0;
+  //               endY = startPoint.y - slope * startPoint.x;
+  //           }
 
             
             
 
-              // If a temporary line already exists, update its end point
-              if (rayLine) {
-                  rayLine.attr("x2", endX).attr("y2", endY);
-              } else {
-                  // Otherwise, create a new temporary line
-                  rayLine = g.append("line")
-                      .attr("class", "temp-ray-line")
-                      .attr("x1", startPoint.x)
-                      .attr("y1", startPoint.y)
-                      .attr('pointer-events','none')
-                      .attr("x2", endX)
-                      .attr("y2", endY)
-                      .attr("stroke", "red")
-                      .attr("stroke-width", 1.5)
-                      .attr("stroke-dasharray", "4 4");
+  //             // If a temporary line already exists, update its end point
+  //             if (rayLine) {
+  //                 rayLine.attr("x2", endX).attr("y2", endY);
+  //             } else {
+  //                 // Otherwise, create a new temporary line
+  //                 rayLine = g.append("line")
+  //                     .attr("class", "temp-ray-line")
+  //                     .attr("x1", startPoint.x)
+  //                     .attr("y1", startPoint.y)
+  //                     .attr('pointer-events','none')
+  //                     .attr("x2", endX)
+  //                     .attr("y2", endY)
+  //                     .attr("stroke", "red")
+  //                     .attr("stroke-width", 1.5)
+  //                     .attr("stroke-dasharray", "4 4");
 
-                      // enableLineDrawing = false; // Disable line drawing after second click for trend line
+  //                     // enableLineDrawing = false; // Disable line drawing after second click for trend line
 
-              }
-          }
-      });
+  //             }
+  //         }
+  //     });
       
 
 
-        }
-        else if (drawingType === 'extended-line') {
-          let startPoint = null;
-          let rayLine = null;
+  //       }
+  //       else if (drawingType === 'extended-line') {
+  //         let startPoint = null;
+  //         let rayLine = null;
           
-          if (!startPoint) {
-            const [mx, my] = d3.pointer(event)
-            startPoint = { x: mx, y: my };
-        } else {
-            // If a ray line already exists, remove it
-            if (rayLine) rayLine.remove();
-            rayLine = null
-            startPoint = null
-            enableLineDrawing = true;
-        }
+  //         if (!startPoint) {
+  //           const [mx, my] = d3.pointer(event)
+  //           startPoint = { x: mx, y: my };
+  //       } else {
+  //           // If a ray line already exists, remove it
+  //           if (rayLine) rayLine.remove();
+  //           rayLine = null
+  //           startPoint = null
+  //           enableLineDrawing = true;
+  //       }
 
 
-        overlay.on("mousemove", (event) => {
-          if (startPoint && enableLineDrawing) {
-            const [mx, my] = d3.pointer(event);
+  //       overlay.on("mousemove", (event) => {
+  //         if (startPoint && enableLineDrawing) {
+  //           const [mx, my] = d3.pointer(event);
 
-              //Calculate the angle 0 
-              const theta = Math.atan2(my - startPoint.y, mx - startPoint.x);
+  //             //Calculate the angle 0 
+  //             const theta = Math.atan2(my - startPoint.y, mx - startPoint.x);
 
-              const endYLeft = startPoint.y - startPoint.x * Math.tan(theta);
-              const endYRight = startPoint.y + (width - startPoint.x) * Math.tan(theta);
+  //             const endYLeft = startPoint.y - startPoint.x * Math.tan(theta);
+  //             const endYRight = startPoint.y + (width - startPoint.x) * Math.tan(theta);
 
-              // If a temporary line already exists, update its end point
-              if (rayLine) {
-                rayLine.attr("x1", 0)
-                  .attr("y1", endYLeft)
-                  .attr("x2", width)
-                  .attr("y2", endYRight)
-              } else {
-                  // Otherwise, create a new temporary line
-                  rayLine = g.append("line")
-                      .attr("class", "temp-ray-line")
-                      .attr("x1", 0)
-                      .attr("y1", endYLeft)
-                      .attr("x2", width)
-                      .attr("y2", endYRight)
-                      .attr('pointer-events','none')
-                      .attr("stroke", "red")
-                      .attr("stroke-width", 1.5)
-                      // .attr("stroke-dasharray", "4 4");
-                      enableLineDrawing = false; // Disable line drawing after second click for trend line
+  //             // If a temporary line already exists, update its end point
+  //             if (rayLine) {
+  //               rayLine.attr("x1", 0)
+  //                 .attr("y1", endYLeft)
+  //                 .attr("x2", width)
+  //                 .attr("y2", endYRight)
+  //             } else {
+  //                 // Otherwise, create a new temporary line
+  //                 rayLine = g.append("line")
+  //                     .attr("class", "temp-ray-line")
+  //                     .attr("x1", 0)
+  //                     .attr("y1", endYLeft)
+  //                     .attr("x2", width)
+  //                     .attr("y2", endYRight)
+  //                     .attr('pointer-events','none')
+  //                     .attr("stroke", "red")
+  //                     .attr("stroke-width", 1.5)
+  //                     // .attr("stroke-dasharray", "4 4");
+  //                     enableLineDrawing = false; // Disable line drawing after second click for trend line
 
-              }
-          }
-      });
+  //             }
+  //         }
+  //     });
       
 
 
-    }else if (drawingType == "horizontal-line-ray"){ 
-          let horizontalLineRay = null;
+  //   }else if (drawingType == "horizontal-line-ray"){ 
+  //         let horizontalLineRay = null;
 
-          overlay.on("click", (event) => {
-              const [mx, my] = d3.pointer(event);
+  //         overlay.on("click", (event) => {
+  //             const [mx, my] = d3.pointer(event);
       
-              // If a horizontal line already exists, remove it
-              if (horizontalLineRay) horizontalLineRay.remove();
+  //             // If a horizontal line already exists, remove it
+  //             if (horizontalLineRay) horizontalLineRay.remove();
       
-              // Draw the horizontal line from the clicked point to the right edge of the chart
-              horizontalLineRay = g.append("line")
-                  .attr("class", "horizontal-line-ray")
-                  .attr("x1", mx) // starts from the click piont
-                  .attr("y1", my)
-                  .attr("x2", width) // Extend to the right edge of the chart
-                  .attr("y2", my)
-                  .attr("stroke", "green")
-                  .attr("stroke-width", 1.5);
-          });
-        }else if (drawingType == "horizontal-line")
-        { 
-          let horizontalLine = null;
+  //             // Draw the horizontal line from the clicked point to the right edge of the chart
+  //             horizontalLineRay = g.append("line")
+  //                 .attr("class", "horizontal-line-ray")
+  //                 .attr("x1", mx) // starts from the click piont
+  //                 .attr("y1", my)
+  //                 .attr("x2", width) // Extend to the right edge of the chart
+  //                 .attr("y2", my)
+  //                 .attr("stroke", "green")
+  //                 .attr("stroke-width", 1.5);
+  //         });
+  //       }else if (drawingType == "horizontal-line")
+  //       { 
+  //         let horizontalLine = null;
 
 
-          overlay.on("click", (event) => {
-            const [mx, my] = d3.pointer(event); 
-            if(horizontalLine) horizontalLine.remove();
+  //         overlay.on("click", (event) => {
+  //           const [mx, my] = d3.pointer(event); 
+  //           if(horizontalLine) horizontalLine.remove();
 
 
-            horizontalLine = g.append("line")
-            .attr('class'," horizonal-line")
-            .attr("x1", 0) // Start from the edge of the chart 
-            .attr("y1", my)
-            .attr("x2", width) //Extend to the edge of the width 
-            .attr("y2", my)
-            .attr("stroke", "green")
-            .attr("stroke-width", 1.5)
-          });
+  //           horizontalLine = g.append("line")
+  //           .attr('class'," horizonal-line")
+  //           .attr("x1", 0) // Start from the edge of the chart 
+  //           .attr("y1", my)
+  //           .attr("x2", width) //Extend to the edge of the width 
+  //           .attr("y2", my)
+  //           .attr("stroke", "green")
+  //           .attr("stroke-width", 1.5)
+  //         });
 
       
-        }
-        else if  (drawingType == "vertical") { 
-          let verticalLine = null;
+  //       }
+  //       else if  (drawingType == "vertical") { 
+  //         let verticalLine = null;
 
-          overlay.on("click", (event) => {
-              const [mx, my] = d3.pointer(event);
+  //         overlay.on("click", (event) => {
+  //             const [mx, my] = d3.pointer(event);
       
-              // If a vertical line already exists, remove it
-              if (verticalLine) verticalLine.remove();
+  //             // If a vertical line already exists, remove it
+  //             if (verticalLine) verticalLine.remove();
       
-              // Draw the vertical line from the top edge to the bottom edge of the chart at the clicked x-coordinate
-              verticalLine = g.append("line")
-                  .attr("class", "vertical-line")
-                  .attr("x1", mx)
-                  .attr("y1", 0) // Start from the top edge of the chart
-                  .attr("x2", mx)
-                  .attr("y2", height) // Extend to the bottom edge of the chart
-                  .attr("stroke", "purple")
-                  .attr("stroke-width", 1.5);
-          });
-        }else if (drawingType === "cross-line")
-        { 
-          let crossLineHorizontal = null;
-          let crossLineVertical = null;
+  //             // Draw the vertical line from the top edge to the bottom edge of the chart at the clicked x-coordinate
+  //             verticalLine = g.append("line")
+  //                 .attr("class", "vertical-line")
+  //                 .attr("x1", mx)
+  //                 .attr("y1", 0) // Start from the top edge of the chart
+  //                 .attr("x2", mx)
+  //                 .attr("y2", height) // Extend to the bottom edge of the chart
+  //                 .attr("stroke", "purple")
+  //                 .attr("stroke-width", 1.5);
+  //         });
+  //       }else if (drawingType === "cross-line")
+  //       { 
+  //         let crossLineHorizontal = null;
+  //         let crossLineVertical = null;
 
           
-          overlay.on("click", (event) => {
-            const [mx, my] = d3.pointer(event);
+  //         overlay.on("click", (event) => {
+  //           const [mx, my] = d3.pointer(event);
     
-            // If a vertical line already exists, remove it
-            if (crossLineHorizontal) crossLineHorizontal.remove();
-            if(crossLineVertical) crossLineVertical.remove();
+  //           // If a vertical line already exists, remove it
+  //           if (crossLineHorizontal) crossLineHorizontal.remove();
+  //           if(crossLineVertical) crossLineVertical.remove();
 
-            // Draw the vertical line from the top edge to the bottom edge of the chart at the clicked x-coordinate
-            crossLineVertical = g.append("line")
-                .attr("class", "cross-line-horizontal")
-                .attr("x1", mx)
-                .attr("y1", 0) // Start from the top edge of the chart
-                .attr("x2", mx)
-                .attr("y2", height) // Extend to the bottom edge of the chart
-                .attr("stroke", "purple")
-                .attr("stroke-width", 1.5);
+  //           // Draw the vertical line from the top edge to the bottom edge of the chart at the clicked x-coordinate
+  //           crossLineVertical = g.append("line")
+  //               .attr("class", "cross-line-horizontal")
+  //               .attr("x1", mx)
+  //               .attr("y1", 0) // Start from the top edge of the chart
+  //               .attr("x2", mx)
+  //               .attr("y2", height) // Extend to the bottom edge of the chart
+  //               .attr("stroke", "purple")
+  //               .attr("stroke-width", 1.5);
 
 
 
-            crossLineHorizontal = g.append("line")
-            .attr('class', "cross-line-vertical")
-            .attr("x1", 0)
-            .attr("y1", my)
-            .attr("x2", width)
-            .attr("y2", my)
-            .attr("stroke", "purple")
-            .attr("stroke-width", 1.5)
+  //           crossLineHorizontal = g.append("line")
+  //           .attr('class', "cross-line-vertical")
+  //           .attr("x1", 0)
+  //           .attr("y1", my)
+  //           .attr("x2", width)
+  //           .attr("y2", my)
+  //           .attr("stroke", "purple")
+  //           .attr("stroke-width", 1.5)
             
-        });
+  //       });
 
 
 
 
-        } 
+  //       } 
       
-      }
-    });
+  //     }
+  //   });
 
    
-  }
+  // }
 };
 
 

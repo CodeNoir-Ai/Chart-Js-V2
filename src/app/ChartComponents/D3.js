@@ -214,7 +214,6 @@ const handleMouseMove = (e) => {
       // Update the viewBox attribute for responsiveness
       svgContainer.attr("viewBox", `0 0 ${newWidth + margin.left + margin.right} ${newHeight + margin.top + margin.bottom}`);
 
-      d3.select(priceAxiesRef.current).selectAll('*').remove();
       // Remove previous chart elements
       svg.selectAll('*').remove();
 

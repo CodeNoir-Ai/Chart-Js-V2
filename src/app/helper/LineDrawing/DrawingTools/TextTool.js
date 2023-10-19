@@ -1,3 +1,7 @@
+
+import * as d3 from 'd3';
+
+
 export const handleTextTool = (svg, overlay) => {
     // Assuming you have a reference to your text-tool-container
     const textToolContainer = d3.select(".text-tool-container");
