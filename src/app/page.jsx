@@ -1,7 +1,6 @@
 "use client";
 
 import D3JS from "./components/D3";
-import {FinancialChartComponent} from "./components/ChartComponent/Chart";
 import Head from "next/head";
 import Nav from "./components/Navbar.js"
 export default function Home() {
@@ -15,10 +14,13 @@ export default function Home() {
         <meta property="og:title" content="My new title" key="title" />
       </Head>
    
-    <Nav />
+    {/* <Nav /> */}
+
+
+
+    <D3JS />
 
       <div>
-        <D3JS />
        
       </div>
     </div>

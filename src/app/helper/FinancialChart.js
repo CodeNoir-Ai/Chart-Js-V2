@@ -35,6 +35,8 @@ export class FinancialChart {
         this.lineStartPoint = null;
         this.tempLine = null;
 
+        
+
         this.container = container;
         this.initializeChartComponents();
         window.addEventListener("resize", this.handleResize.bind(this));
@@ -75,6 +77,7 @@ export class FinancialChart {
     }
 
     handleResize() {
+        this.svg.selectAll('*').remove(); // Clear out old elements
         this.attrs.width = this.container.clientWidth;
         this.attrs.height = this.container.clientHeight;
         this.update(this.attrs.data);
@@ -117,7 +120,7 @@ export class FinancialChart {
 
     }
 
-    renderChart() {
+    render() {
 
 
         this.chartArea.select(".y-gridlines")
@@ -142,6 +145,10 @@ export class FinancialChart {
 
         this.chartArea.select(".x-axis").call(d3.axisBottom(this.attrs.xScale));
         this.chartArea.select(".y-axis").call(d3.axisLeft(this.attrs.yScale));
+
+
+
+
     }
 
     update(data) {
@@ -155,7 +162,7 @@ export class FinancialChart {
             .domain([d3.min(this.attrs.data, d => d.Close), d3.max(this.attrs.data, d => d.Close)])
             .range([this.attrs.height - this.attrs.margin.top - this.attrs.margin.bottom, 0]);
 
-        this.renderChart();
+        this.render();
     }
 
     destroy() {

@@ -673,16 +673,6 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
     .attr("pointer-events", "all");
 
 
-  // Add x-axis grid lines
-  // const xAxisGrid = d3.axisBottom(x)
-  //   .tickSize(-height)
-  //   .tickFormat('')
-  //   .ticks(10);
-
-  // g.append("g")
-  //   .attr("class", "x-grid")
-  //   .attr("transform", `translate(0, ${height})`)
-  //   .call(xAxisGrid);
 
   // Add y-axis grid lines
   const yAxisGrid = d3.axisLeft(y)

@@ -155,31 +155,31 @@ const handleMouseMove = (e) => {
   const [chartWidth, setChartWidth] = useState(null)
   const [chartHeight, setChartHeight] = useState(null)
 
-  useEffect(() => {
+//   useEffect(() => {
 
-    d3.select(chartRef.current).selectAll("*").remove();
-    d3.select(chartRef.current).style("cursor", "crosshair");
+//     d3.select(chartRef.current).selectAll("*").remove();
+//     d3.select(chartRef.current).style("cursor", "crosshair");
 
   
 
 
 
 
-    // Create responsive container
-    const svgDiv = d3.select(chartRef.current)
-      .append("div")
-      .classed("svg-container", true);  // Make it responsive
+//     // Create responsive container
+//     const svgDiv = d3.select(chartRef.current)
+//       .append("div")
+//       .classed("svg-container", true);  // Make it responsive
 
 
-      const zoomRect = svgDiv.select("rect");
-      zoomRectRef.current = zoomRect;
+//       const zoomRect = svgDiv.select("rect");
+//       zoomRectRef.current = zoomRect;
     
-    // Get initial dimensions
-    const initialWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
-    const initialHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
+//     // Get initial dimensions
+//     const initialWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
+//     const initialHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
 
-    setChartWidth(initialWidth)
-    setChartHeight(initialHeight)
+//     setChartWidth(initialWidth)
+//     setChartHeight(initialHeight)
 
 
   
@@ -187,175 +187,175 @@ const handleMouseMove = (e) => {
      
         
 
-    // Create SVG element
-    const svgContainer = svgDiv.append('svg')
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .attr("preserveAspectRatio", "xMinYMin meet")
-      .classed("svg-content-responsive", true);  // Make it responsive
+//     // Create SVG element
+//     const svgContainer = svgDiv.append('svg')
+//       .attr("width", "100%")
+//       .attr("height", "100%")
+//       .attr("preserveAspectRatio", "xMinYMin meet")
+//       .classed("svg-content-responsive", true);  // Make it responsive
 
-      //Getting the height data to manipulate the inner G element height.
-      const svgContainerHeight = svgContainer.node().getBoundingClientRect().height;
-      const svgContainerRect = svgContainer.node().getBoundingClientRect()
-
-
-
-    // Create SVG element for price axis
-    const priceAxisSvg = d3.select(priceAxiesRef.current)
-      .append("svg")
-      .attr("width", initialWidth)  // Width of the price axis container
-      .attr("height", initialHeight)  // Set the height to be the same as the main SVG
-      .attr("class", "price-axis-container");
+//       //Getting the height data to manipulate the inner G element height.
+//       const svgContainerHeight = svgContainer.node().getBoundingClientRect().height;
+//       const svgContainerRect = svgContainer.node().getBoundingClientRect()
 
 
-    // Create the main group element
-    const svg = svgContainer
-      .append('g')
-      .attr('transform', `translate(${0}, ${margin.top})`);
+
+//     // Create SVG element for price axis
+//     const priceAxisSvg = d3.select(priceAxiesRef.current)
+//       .append("svg")
+//       .attr("width", initialWidth)  // Width of the price axis container
+//       .attr("height", initialHeight)  // Set the height to be the same as the main SVG
+//       .attr("class", "price-axis-container");
+
+
+//     // Create the main group element
+//     const svg = svgContainer
+//       .append('g')
+//       .attr('transform', `translate(${0}, ${margin.top})`);
 
   
 
-    const g = svg.append("g").attr("transform", "translate(0, 0)");
+//     const g = svg.append("g").attr("transform", "translate(0, 0)");
 
-    // Function to handle window resize for chart
-    const handleResize = () => {
-      // Get new dimensions
-      const newWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
-      const newHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
+//     // Function to handle window resize for chart
+//     const handleResize = () => {
+//       // Get new dimensions
+//       const newWidth = parseInt(svgDiv.style("width")) - margin.left - margin.right;
+//       const newHeight = parseInt(svgDiv.style("height")) - margin.top - margin.bottom;
 
-      // Update the viewBox attribute for responsiveness
-      svgContainer.attr("viewBox", `0 0 ${newWidth + margin.left + margin.right} ${newHeight + margin.top + margin.bottom}`);
+//       // Update the viewBox attribute for responsiveness
+//       svgContainer.attr("viewBox", `0 0 ${newWidth + margin.left + margin.right} ${newHeight + margin.top + margin.bottom}`);
 
-      d3.select(priceAxiesRef.current).selectAll('*').remove();
-      // Remove previous chart elements
-      svg.selectAll('*').remove();
+//       d3.select(priceAxiesRef.current).selectAll('*').remove();
+//       // Remove previous chart elements
+//       svg.selectAll('*').remove();
 
-      const newPriceAxisSvg = d3.select(priceAxiesRef.current)
-        .append("svg")
-        .attr("width", 50)
-        .attr("height", newHeight);
-      // Recreate the main group element
-      const newG = svg.append("g").attr("transform", "translate(0, 0)");
+//       const newPriceAxisSvg = d3.select(priceAxiesRef.current)
+//         .append("svg")
+//         .attr("width", 50)
+//         .attr("height", newHeight);
+//       // Recreate the main group element
+//       const newG = svg.append("g").attr("transform", "translate(0, 0)");
 
-      // Call the generateLineChart function with new dimensions
-      generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
-    };
+//       // Call the generateLineChart function with new dimensions
+//       generateChart(chartType, svg, newG, data, newWidth, newHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, newPriceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
+//     };
 
-    // Initial chart drawing
-    generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
+//     // Initial chart drawing
+//     generateChart(chartType, svg, g, data, initialWidth, initialHeight, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, priceAxisSvg, showMovingAverage, showExponentialMovingAverage, showFib, showTextTool, lineType);
 
-    // Attach resize event listener
-    window.addEventListener('resize', handleResize);
+//     // Attach resize event listener
+//     window.addEventListener('resize', handleResize);
 
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-
-
-    // Initialize margins and data
-
-  }, [chartType, priceAxiesRef]);
+//     // Cleanup
+//     return () => {
+//       window.removeEventListener('resize', handleResize);
+//     };
 
 
+//     // Initialize margins and data
+
+//   }, [chartType, priceAxiesRef]);
 
 
-// Second useEffect for line drawings
-useEffect(() => {
-  const margin = { top: 30, right: 80, bottom: 40, left: 53 };
-
-  // Select the existing SVG and group elements
-  const svg = d3.select(chartRef.current).select('svg').select('g');
-  // Assuming you have a rect for zooming in your SVG
-  const zoomRect = svg.select("rect");
-  const overlay = svg.select(".overlay");
 
 
-  const x = d3.scaleUtc()
-  .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
-  .range([0, chartWidth + 200]);
+// // Second useEffect for line drawings
+// useEffect(() => {
+//   const margin = { top: 30, right: 80, bottom: 40, left: 53 };
 
-  const y = d3.scaleLinear()
-    .domain([
-      d3.min(data, d => Math.min(d.Low, d.Close)),
-      d3.max(data, d => Math.max(d.High, d.Close))
-    ])
-    .range([chartHeight, 0]);
+//   // Select the existing SVG and group elements
+//   const svg = d3.select(chartRef.current).select('svg').select('g');
+//   // Assuming you have a rect for zooming in your SVG
+//   const zoomRect = svg.select("rect");
+//   const overlay = svg.select(".overlay");
 
 
-    console.log("Logging the chart widt", chartWidth)
-    console.log("Loggin in useEFfect height",chartHeight)
+//   const x = d3.scaleUtc()
+//   .domain(d3.extent(data, d => new Date(d.Date)))  // Assuming Date is in correct format
+//   .range([0, chartWidth + 200]);
+
+//   const y = d3.scaleLinear()
+//     .domain([
+//       d3.min(data, d => Math.min(d.Low, d.Close)),
+//       d3.max(data, d => Math.max(d.High, d.Close))
+//     ])
+//     .range([chartHeight, 0]);
+
+
+//     console.log("Logging the chart widt", chartWidth)
+//     console.log("Loggin in useEFfect height",chartHeight)
 
     
-  if (overlay.empty()) {
-    console.warn("No overlay found");
-    return;
-  }
+//   if (overlay.empty()) {
+//     console.warn("No overlay found");
+//     return;
+//   }
   
-  // Check if zoomRect exists 
-  if (zoomRect.empty()) {
-    console.warn("No zoomRect found");
-    return;
-  }
+//   // Check if zoomRect exists 
+//   if (zoomRect.empty()) {
+//     console.warn("No zoomRect found");
+//     return;
+//   }
 
-  // Remove existing event listeners to avoid duplication
-  overlay.on("mousedown", null);
-  overlay.on("mousemove", null);
+//   // Remove existing event listeners to avoid duplication
+//   overlay.on("mousedown", null);
+//   overlay.on("mousemove", null);
 
-  zoomRect.on("mousedown", null);
-  zoomRect.on("mousemove", null); 
-
-
-
-  // Re-attach event listeners if line drawing is enabled
-  if (enableLineDrawing) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, null, null, lineType,x,y);
-  }
-  if (showTextTool) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showTextTool, "text", null, x, y);
-  }
-
-  if (showFib) {
-    manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showFib, null, null, x, y);
-  }
+//   zoomRect.on("mousedown", null);
+//   zoomRect.on("mousemove", null); 
 
 
 
+//   // Re-attach event listeners if line drawing is enabled
+//   if (enableLineDrawing) {
+//     manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, null, null, lineType,x,y);
+//   }
+//   if (showTextTool) {
+//     manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showTextTool, "text", null, x, y);
+//   }
 
-}, [enableLineDrawing, showTextTool, lineType]);
-
-
-
-//UseEffect to handle showcasing the moving averages
-useEffect(() => {
-  // Select the existing SVG and group elements
-  const svg = d3.select(chartRef.current).select('svg').select('g');
+//   if (showFib) {
+//     manageLineDrawing(svg, svg.select('g'), overlay, enableLineDrawing, showFib, null, null, x, y);
+//   }
 
 
 
 
-  // Check if the SVG and group elements are available
-  if (!svg.empty()) {
-    if (showMovingAverage) {
-      // If showMovingAverage is true, display the moving average line
-      svg.select("#movingAverageLine").style("display", null); // or "block"
-    } else {
-      // If showMovingAverage is false, hide the moving average line
-      svg.select("#movingAverageLine").style("display", "none");
-    }
+// }, [enableLineDrawing, showTextTool, lineType]);
 
-    if(showExponentialMovingAverage){
-      svg.select("#expmovingAverageLine").style("display", null); // or "block"
 
-    }else { 
-      svg.select("#expmovingAverageLine").style("display", "none");
 
-    }
+// //UseEffect to handle showcasing the moving averages
+// useEffect(() => {
+//   // Select the existing SVG and group elements
+//   const svg = d3.select(chartRef.current).select('svg').select('g');
 
-  } else {
-    console.warn("SVG or group element not found");
-  }
-}, [showMovingAverage, showExponentialMovingAverage, chartRef]);
+
+
+
+//   // Check if the SVG and group elements are available
+//   if (!svg.empty()) {
+//     if (showMovingAverage) {
+//       // If showMovingAverage is true, display the moving average line
+//       svg.select("#movingAverageLine").style("display", null); // or "block"
+//     } else {
+//       // If showMovingAverage is false, hide the moving average line
+//       svg.select("#movingAverageLine").style("display", "none");
+//     }
+
+//     if(showExponentialMovingAverage){
+//       svg.select("#expmovingAverageLine").style("display", null); // or "block"
+
+//     }else { 
+//       svg.select("#expmovingAverageLine").style("display", "none");
+
+//     }
+
+//   } else {
+//     console.warn("SVG or group element not found");
+//   }
+// }, [showMovingAverage, showExponentialMovingAverage, chartRef]);
 
 
 
@@ -400,10 +400,15 @@ useEffect(() => {
         </div>
 
 
-         
+{/*          
           <div ref={chartRef}>
 
-          </div>
+          </div> */}
+
+          <FinancialChartComponent
+            props = {data}
+          
+          />
 
           <div ref = {toolContainerRef} 
         onMouseMove={handleMouseMove}
