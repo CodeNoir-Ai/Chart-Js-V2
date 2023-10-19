@@ -1,8 +1,8 @@
 "use client";
 
-import D3JS from "./components/D3";
+import D3JS from "./ChartComponents/D3";
 import Head from "next/head";
-import Nav from "./components/Navbar.js"
+import Nav from "./ChartComponents/Navbar.js"
 export default function Home() {
   return (
     <div>

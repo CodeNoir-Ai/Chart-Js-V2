@@ -10,11 +10,18 @@ import _, { maxBy } from 'lodash';
 import next from 'next';
 import { Line } from 'react-chartjs-2';
 
+
 /**
  * @param {Object} svg - The D3 Selection for the SVG element to draw in.
+ * @param {Object} g - Hanldes the Zooming Capabilites, all chart creation is being appended to this rect 
  * @param {Array} data - The data to plot.
  * @param {Number} width - The width of the SVG element.
  * @param {Number} height - The height of the SVG element.
+ * @param {Object} Overlay - Container That Handle Drawing Indications
+ * @param {Bool} EnableLineDrawing - Boolean that checks if drawing capabilites is true or not 
+ * @param {Bool} showTextTool - Boolean that checks if Text Tool Is Shown 
+ * @param {Bool} showFib - BBoolean that checks if Fib Tool Is Shown 
+ * @param {Bool} drawingType - Case switch that checks which drawing type is activated
  */
 
 
@@ -99,57 +106,6 @@ export const manageLineDrawing = (svg, g, overlay, enableLineDrawing, showTextTo
 
 
 
-if(showTextTool){ 
-
-  if(showTextTool === false){
-    return
-  }
-
-
-      
-    overlay.on("click", (event) => {
-      if(showTextTool === false){
-        return
-      }
-
-      const [mx, my] = d3.pointer(event);
-
-
-
-         // Assuming you have a reference to your text-tool-container
-    const textToolContainer = d3.select(".text-tool-container");
-
-    overlay.on("click", (event) => {
-        const [mx, my] = d3.pointer(event);
-
-
-
-        // Show the text-tool-container
-        textToolContainer.style("display", "flex");
-
-        // Create or select the SVG text element
-        const svgText = overlay.select("text").empty() 
-        ? svg.append("text")
-            .attr("x", mx)
-            .attr("y", my)
-            .attr("fill", "white")
-            .attr("dy", "0.35em")          // Adjust vertical position
-        : svg.select("text")
-            .attr("x", mx)
-            .attr("y", my)
-            .attr("dy", "0.35em");         // Adjust vertical position
-
-        // Attach input event listener to the textarea
-        d3.select(".text-area").on("input", function() {
-          
-            const value = d3.select(this).property("value");
-            svgText.text(value);
-        });
-    });
-
-    })
- 
-}
 
 
 
@@ -632,10 +588,10 @@ if(showFib){
 
 
 
-export const generateLineChart = (svg, g, data, width, height,svgContainerHeight,svgContainerRect,  enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
-  // Create scales
+
+export const generateLineChart = (svg, g, data, width, height,svgContainerHeight,svgContainerRect,  enableLineDrawing, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
+  // Create scales s
   g.selectAll('*').remove();
-  d3.select(priceAxiesRef.current).selectAll("*").remove();
 
   const x = d3.scaleUtc()
     .domain(d3.extent(data, d => d.Date))
@@ -723,28 +679,6 @@ export const generateLineChart = (svg, g, data, width, height,svgContainerHeight
 
 
 
-
-
-  // Add dots
-  // g.selectAll(".dot")
-  //   .data(data)
-  //   .enter().append("circle")
-  //   .attr("class", "dot")
-  //   .attr("cx", d => x(d.Date))  // Make sure the attribute names match your data
-  //   .attr("cy", d => y(d.Close))
-  //   .attr("r", 3)
-  //   .on('mouseover', (event, d) => {
-  //     tooltip.style('display', 'block')
-  //       .html(`
-  //           <div>Date: ${d.Date}</div>
-  //           <div>Close Price: ${d.Close}</div>
-  //         `)
-  //       .style('left', (event.pageX + 15) + 'px')
-  //       .style('top', (event.pageY - 28) + 'px');
-  //   })
-  //   .on('mouseout', () => {
-  //     tooltip.style('display', 'none');
-  //   });
 
 
 
@@ -1130,7 +1064,7 @@ g.call(zoom);
 
 
 
-export const generateCandleStickChart =(svg, g, data, width, height,svgContainerHeight,svgContainerRect,  enableLineDrawing, priceAxiesRef, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
+export const generateCandleStickChart =(svg, g, data, width, height,svgContainerHeight,svgContainerRect,  enableLineDrawing, showMovingAverage,showExponentialMovingAverage, showFib, showTextTool, drawingType ) => {
 
   /* can we reduce to just charting data layer?
    * leave the drawing layer alone
@@ -1506,7 +1440,7 @@ overlay.on("mousemove", function(event) {
 
 
 // This generates the specific Chart Based on selection
-export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, showMovingAverage , showExponentialMovingAverage, showFib, showTextTool, drawingType) => {
+export const generateChart = (chartType, svg, g, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, showMovingAverage , showExponentialMovingAverage, showFib, showTextTool, drawingType) => {
   // Clear previous chart elements
   svg.selectAll('*').remove();
 
@@ -1515,9 +1449,9 @@ export const generateChart = (chartType, svg, g, data, width, height, svgContain
 
   switch (chartType) {
     case 'line':
-      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
+      return generateLineChart(svg, newG, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
     case 'candlestick':
-      return generateCandleStickChart(svg, newG, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, priceAxiesRef, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
+      return generateCandleStickChart(svg, newG, data, width, height, svgContainerHeight, svgContainerRect, enableLineDrawing, showMovingAverage, showExponentialMovingAverage,showFib, showTextTool, drawingType);
     default:
       return null;
   }
